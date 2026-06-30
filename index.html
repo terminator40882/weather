@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Himmel — Wetter</title>
+<meta name="description" content="Fullscreen-Wetter mit Niederschlags-Nowcast und DWD-Warnungen." />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0f1722" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Himmel" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="sky" id="sky"></div>
+
+<main id="app" class="app" aria-live="polite">
+
+  <div id="alerts" class="alerts" hidden></div>
+
+  <header class="head">
+    <div class="eyebrow">
+      <span id="place">Standort wird ermittelt…</span>
+      <span class="dot">·</span>
+      <span id="clock">--:--</span>
+    </div>
+  </header>
+
+  <section class="hero" aria-label="Aktuelles Wetter">
+    <div class="hero-glyph" id="heroGlyph" aria-hidden="true">·</div>
+    <div class="hero-temp">
+      <span id="temp" class="temp-val">--</span><span class="temp-unit">°</span>
+    </div>
+    <div class="hero-meta">
+      <span id="condition">—</span>
+      <span class="sep">/</span>
+      <span id="feels" class="readout">gefühlt --°</span>
+    </div>
+  </section>
+
+  <section class="nowcast" aria-label="Niederschlag, nächste zwei Stunden">
+    <div class="panel-label">
+      <span>Regen — nächste 2 Std</span>
+      <span id="nowcastSummary" class="readout"></span>
+    </div>
+    <div id="rainStrip" class="rain-strip" role="img" aria-label="Niederschlagsverlauf"></div>
+    <div class="rain-axis"><span>jetzt</span><span>+1h</span><span>+2h</span></div>
+  </section>
+
+  <section class="readouts" aria-label="Messwerte">
+    <div class="cell">
+      <span class="cell-label">Wind</span>
+      <span class="cell-val"><span id="wind" class="readout">--</span> <span class="unit">km/h</span></span>
+      <span class="cell-sub"><span id="windArrow" class="arrow" aria-hidden="true">↑</span> <span id="windDir" class="readout">—</span> · Böen <span id="gust" class="readout">--</span></span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Feuchte</span>
+      <span class="cell-val"><span id="humidity" class="readout">--</span> <span class="unit">%</span></span>
+      <span class="cell-sub">Taupunkt <span id="dew" class="readout">--°</span></span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Druck</span>
+      <span class="cell-val"><span id="pressure" class="readout">----</span> <span class="unit">hPa</span></span>
+      <span class="cell-sub">Sicht <span id="vis" class="readout">--</span></span>
+    </div>
+  </section>
+
+  <section class="hourly" aria-label="Stündliche Vorhersage">
+    <div class="panel-label"><span>Stündlich</span></div>
+    <div id="hourly" class="hourly-track"></div>
+  </section>
+
+  <section class="daily" aria-label="7-Tage-Vorhersage">
+    <div class="panel-label"><span>7 Tage</span></div>
+    <div id="daily" class="daily-list"></div>
+  </section>
+
+  <footer class="foot">
+    <button id="refresh" class="btn" type="button">Aktualisieren</button>
+    <button id="fs" class="btn" type="button">Vollbild</button>
+    <span class="credit">Daten: Open-Meteo (DWD ICON-D2) · Warnungen: DWD via Bright Sky</span>
+  </footer>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
