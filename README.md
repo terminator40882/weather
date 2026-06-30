@@ -9,9 +9,10 @@ severe-weather warnings.
   (`current`, `minutely_15` precipitation, wind, `hourly`, `daily`).
 - **Rain radar:** [RainViewer](https://www.rainviewer.com) radar tiles on a
   [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
-  dark base map rendered with [Leaflet](https://leafletjs.com) — keyless.
-  Centred on your position with a **5 km** (default) / **20 km** toggle, and
-  it loops through the recent + nowcast frames.
+  dark base map rendered with [Leaflet](https://leafletjs.com) (bundled in
+  `vendor/`, no CDN) — keyless. Centred on your position with a **5 km**
+  (default) / **20 km** toggle. It loops through the recent + nowcast frames,
+  and a thin scrubber lets you pause and step through the timeline.
 - **Warnings:** DWD via [Bright Sky](https://brightsky.dev) — keyless, CORS-enabled.
 - **Location names:** BigDataCloud reverse geocoding (keyless).
 - **Compass-aligned wind:** when the device exposes an absolute orientation /

@@ -239,7 +239,7 @@ $('fs').addEventListener('click', async ()=>{
 /* ---------- radar (RainViewer tiles on a Leaflet/CARTO dark map) ---------- */
 const RV_API = 'https://api.rainviewer.com/public/weather-maps.json';
 let radarMap=null, radarLayer=null, radarCircle=null, radarDot=null;
-let radarRadiusKm=5, radarFrames=[], radarIdx=0, radarTimer=null, radarSized=false;
+let radarRadiusKm=5, radarFrames=[], radarIdx=0, radarTimer=null, radarSized=false, radarPlaying=false;
 
 function initRadar(){
   if(radarMap || typeof L === 'undefined') return;
@@ -252,6 +252,7 @@ function initRadar(){
     subdomains:'abcd', maxZoom:19,
     attribution:'© OpenStreetMap, © CARTO · Radar: RainViewer'
   }).addTo(radarMap);
+  radarMap.setView([FALLBACK.lat, FALLBACK.lon], 9); // show the map before geolocation resolves
   loadRadarFrames();
 }
 
@@ -283,18 +284,28 @@ function showRadarFrame(i){
     const t=new Date(f.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     lbl.textContent = (f.forecast ? '+ ' : '') + t;
   }
+  const s=$('radarSlider');
+  if(s && +s.value !== i) s.value = i;
+}
+
+function radarSetPlaying(on){
+  radarPlaying = on;
+  const btn=$('radarPlay'); if(btn) btn.textContent = on ? '⏸' : '▶';
+  clearInterval(radarTimer); radarTimer=null;
+  if(on && radarFrames.length && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    radarTimer = setInterval(()=>{
+      radarIdx = (radarIdx+1) % radarFrames.length;
+      showRadarFrame(radarIdx);
+    }, 700);
+  }
 }
 
 function startRadarAnim(){
   if(!radarFrames.length) return;
-  clearInterval(radarTimer);
+  const s=$('radarSlider'); if(s) s.max = radarFrames.length-1;
   radarIdx = radarFrames.length-1;
   showRadarFrame(radarIdx);
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
-  radarTimer = setInterval(()=>{
-    radarIdx = (radarIdx+1) % radarFrames.length;
-    showRadarFrame(radarIdx);
-  }, 700);
+  radarSetPlaying(!matchMedia('(prefers-reduced-motion:reduce)').matches);
 }
 
 function fitRadar(){
@@ -314,7 +325,8 @@ function updateRadar(loc){
     radarCircle.setLatLng(c); radarCircle.setRadius(radarRadiusKm*1000);
   }
   fitRadar();
-  if(radarFrames.length) loadRadarFrames(); // keep frames current on each refresh
+  // keep frames current on refresh, but don't interrupt a paused/scrubbing user
+  if(radarFrames.length && radarPlaying) loadRadarFrames();
   if(!radarSized){ radarSized=true; setTimeout(()=>{ radarMap.invalidateSize(); fitRadar(); }, 200); }
 }
 
@@ -326,6 +338,12 @@ function setRadarRadius(km){
 }
 $('r5').addEventListener('click', ()=>setRadarRadius(5));
 $('r20').addEventListener('click', ()=>setRadarRadius(20));
+$('radarPlay').addEventListener('click', ()=>radarSetPlaying(!radarPlaying));
+$('radarSlider').addEventListener('input', e=>{
+  radarSetPlaying(false);            // scrubbing pauses the loop
+  radarIdx = +e.target.value;
+  showRadarFrame(radarIdx);
+});
 
 /* ---------- compass: align the wind arrow to the viewing direction ---------- */
 let lastWindDir=null, devHeading=null, headingOn=false;
@@ -368,6 +386,7 @@ function initCompass(){
 /* ---------- init ---------- */
 tick(); setInterval(tick, 15000);
 initCompass();
+initRadar();   // bring up the map + radar frames independently of the weather fetch
 load();
 setInterval(load, REFRESH_MS);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) load(); });

@@ -1,10 +1,12 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v2';
+const CACHE = 'himmel-v3';
 const SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './vendor/leaflet.js',
+  './vendor/leaflet.css',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

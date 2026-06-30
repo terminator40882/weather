@@ -10,6 +10,7 @@
   --rain-strong:#2f7fc4;
   --alert:#e6a23c;
   --alert-strong:#d4622a;
+  --hot:#e8514a;
   --pad:clamp(18px,5vw,30px);
 }
 
@@ -120,7 +121,8 @@ body{
 .cell-val{font-size:1.42rem;font-weight:600;white-space:nowrap}
 .cell-val .unit,.hero-meta .unit{font-size:.74rem;color:var(--mist-dim);font-weight:400}
 .cell-sub{font-size:.72rem;color:var(--mist-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.arrow{display:inline-block;color:var(--warm)}
+/* red while no compass heading is available; turns warm once aligned to view */
+.arrow{display:inline-block;color:var(--hot);transition:color .2s}
 
 /* hourly */
 .hourly{border-top:1px solid var(--line);padding-top:20px}
@@ -205,8 +207,29 @@ body{
 }
 .leaflet-control-attribution a{color:var(--mist-dim)!important}
 
-/* wind arrow aligned to the device heading */
-.compass-on .arrow{color:var(--rain)}
+/* once aligned to the device heading, the arrow is no longer red */
+.compass-on .arrow{color:var(--warm)}
+
+/* radar scrubber */
+.radar-scrub{display:flex;align-items:center;gap:10px;margin-top:10px}
+.radar-play{
+  flex:0 0 auto;font:inherit;font-size:.8rem;line-height:1;color:var(--mist);
+  width:30px;height:30px;display:grid;place-items:center;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);
+  border-radius:999px;cursor:pointer;transition:background .15s;
+}
+.radar-play:hover{background:rgba(255,255,255,.12)}
+.radar-slider{
+  flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
+  background:var(--line);cursor:pointer;
+}
+.radar-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--warm);border:0;box-shadow:0 0 0 3px rgba(232,178,122,.18);
+}
+.radar-slider::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:var(--warm);border:0;
+}
 
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
