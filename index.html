@@ -55,27 +55,30 @@
   </section>
 
   <section class="radar" aria-label="Wetterkarten">
-    <div class="panel-label"><span>Wetterkarten</span></div>
-
     <div class="map-card">
+      <div class="panel-label">
+        <span>Radar</span>
+        <span class="src-switch">
+          <button id="srcRv" class="rbtn on" type="button">RainViewer</button>
+          <button id="srcDwd" class="rbtn" type="button">DWD</button>
+        </span>
+      </div>
       <div class="map-wrap">
         <div id="map" class="map"></div>
         <span id="radarTime" class="radar-time readout"></span>
       </div>
       <div class="radar-scrub">
-        <button id="radarPlay" class="radar-play" type="button" aria-label="Abspielen / Pause">⏸</button>
         <input id="radarSlider" class="radar-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Radar-Zeit wählen" />
       </div>
-      <span class="map-credit">Niederschlagsradar — RainViewer</span>
+      <span id="radarCredit" class="map-credit">Niederschlagsradar — RainViewer</span>
     </div>
 
     <div class="map-card">
-      <div class="map-wrap"><div id="mapDwd" class="map"></div></div>
-      <span class="map-credit">Niederschlagsradar — Deutscher Wetterdienst (DWD)</span>
-    </div>
-
-    <div class="map-card">
-      <div class="map-wrap"><div id="mapSat" class="map"></div></div>
+      <div class="panel-label"><span>Satellit Europa</span></div>
+      <div id="satWrap" class="map-wrap">
+        <div id="mapSat" class="map"></div>
+        <button id="satClose" class="map-close" type="button" aria-label="Schließen" hidden>✕</button>
+      </div>
       <span class="map-credit">Satellit Europa — DWD · EUMETSAT (Meteosat)</span>
     </div>
   </section>
@@ -119,6 +122,8 @@
     <button id="compass" class="btn" type="button" hidden>Kompass</button>
     <span class="credit">Daten: Open-Meteo (DWD ICON-D2) &amp; DWD-Messnetz via Bright Sky · Karten: RainViewer, DWD/EUMETSAT · Warnungen: DWD via Bright Sky</span>
   </footer>
+
+  <button id="satExpand" class="btn btn-wide" type="button">Satellitenbild vergrößern</button>
 </main>
 
 <div id="toast" class="toast" hidden></div>

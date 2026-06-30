@@ -9,13 +9,14 @@ severe-weather warnings.
   (`current`, `minutely_15` precipitation, wind, `hourly`, `daily`).
 - **Weather maps** (all keyless, CORS-enabled, on a [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
   dark base map via [Leaflet](https://leafletjs.com), bundled in `vendor/`, no CDN):
-  - [RainViewer](https://www.rainviewer.com) precipitation radar, centred on
-    your position at a fixed regional zoom (so the radar tiles always render).
-    It loops through the recent + nowcast frames; a thin scrubber lets you
-    pause and step through the timeline.
-  - [DWD](https://www.dwd.de) `Niederschlagsradar` (precipitation radar,
-    Germany) via the DWD GeoServer WMS.
-  - DWD / EUMETSAT Meteosat satellite over Europe, also via the DWD WMS.
+  - **Radar** — switchable between [RainViewer](https://www.rainviewer.com)
+    and [DWD](https://www.dwd.de) `Niederschlagsradar` (DWD GeoServer WMS) at
+    the press of a button (only one shown at a time), centred on your position
+    at a fixed regional zoom so the tiles always render. A thin scrubber steps
+    through the timeline — recent past **and** the forecast/nowcast into the
+    future. It opens on the current time and never auto-advances.
+  - **Satellite** — DWD / EUMETSAT Meteosat over Europe (DWD WMS), with a
+    button at the bottom of the page to expand it to fullscreen.
   - Each map names its provider underneath.
 - **Current conditions from two providers, side by side:** Open-Meteo (DWD
   ICON-D2 model) and the DWD station network via [Bright Sky](https://brightsky.dev),

@@ -187,8 +187,32 @@ body{
 /* weather maps */
 .radar{border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:18px}
 .map-card{display:flex;flex-direction:column;gap:7px}
+.map-card .panel-label{margin-bottom:3px}
+.src-switch{display:flex;gap:6px}
+.rbtn{
+  font:inherit;font-size:.72rem;font-weight:600;color:var(--mist-dim);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  padding:4px 11px;border-radius:999px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.rbtn.on{color:var(--ink);background:var(--warm);border-color:var(--warm)}
 .map-credit{font-size:.66rem;color:var(--mist-faint);letter-spacing:.04em}
 .map-wrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+
+/* satellite expand */
+.map-close{
+  position:absolute;top:10px;right:10px;z-index:1001;
+  width:34px;height:34px;display:grid;place-items:center;
+  font-size:1rem;color:var(--mist);background:rgba(12,19,34,.78);
+  border:1px solid var(--line);border-radius:999px;cursor:pointer;
+}
+.map-wrap.expanded{
+  position:fixed;inset:0;z-index:1000;border:0;border-radius:0;
+  width:100vw;height:100vh;height:100svh;
+}
+.map-wrap.expanded .map{height:100%!important}
+body.sat-open{overflow:hidden}
+.btn-wide{width:100%;justify-content:center;text-align:center;margin-top:4px}
 .map{height:clamp(220px,42vw,300px);width:100%;background:#0c1322}
 .leaflet-container{background:#0c1322;font-family:inherit}
 .radar-time{
@@ -223,13 +247,6 @@ body{
 
 /* radar scrubber */
 .radar-scrub{display:flex;align-items:center;gap:10px;margin-top:10px}
-.radar-play{
-  flex:0 0 auto;font:inherit;font-size:.8rem;line-height:1;color:var(--mist);
-  width:30px;height:30px;display:grid;place-items:center;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);
-  border-radius:999px;cursor:pointer;transition:background .15s;
-}
-.radar-play:hover{background:rgba(255,255,255,.12)}
 .radar-slider{
   flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
   background:var(--line);cursor:pointer;
