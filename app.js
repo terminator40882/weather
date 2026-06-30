@@ -88,6 +88,14 @@ async function fetchAlerts(lat, lon){
     const j = await r.json(); return j.alerts || [];
   }catch{ return []; }
 }
+// DWD station measurements via Bright Sky — a second, independent provider.
+async function fetchDwdCurrent(lat, lon){
+  try{
+    const r = await fetch(`https://api.brightsky.dev/current_weather?lat=${lat}&lon=${lon}`);
+    if(!r.ok) return null;
+    const j = await r.json(); return j.weather || null;
+  }catch{ return null; }
+}
 
 /* ---------- render ---------- */
 function renderCurrent(d){
@@ -204,6 +212,31 @@ function renderAlerts(alerts){
   box.hidden=false;
 }
 
+// current conditions from each provider, side by side, with clear attribution
+function renderSources(om, dwd){
+  const grid=$('srcGrid'); if(!grid) return;
+  const cards=[{
+    prov:'Open-Meteo', sub:'Modell DWD ICON-D2',
+    t:om && om.temperature_2m, w:om && om.wind_speed_10m,
+    h:om && om.relative_humidity_2m, p:om && om.surface_pressure
+  }];
+  if(dwd) cards.push({
+    prov:'DWD Messnetz', sub:'via Bright Sky',
+    t:dwd.temperature, w:dwd.wind_speed_10,
+    h:dwd.relative_humidity, p:dwd.pressure_msl
+  });
+  grid.innerHTML = cards.map(c=>`
+    <div class="src">
+      <div class="src-prov">${c.prov}<span class="src-sub">${c.sub}</span></div>
+      <div class="src-t">${r0(c.t)}°</div>
+      <div class="src-meta">
+        <span>Wind ${r0(c.w)} km/h</span>
+        <span>Feuchte ${r0(c.h)} %</span>
+        <span>Druck ${r0(c.p)} hPa</span>
+      </div>
+    </div>`).join('');
+}
+
 /* ---------- orchestration ---------- */
 let CURRENT=null;
 async function load(){
@@ -211,14 +244,16 @@ async function load(){
   try{
     const loc = CURRENT || await getLocation();
     CURRENT = loc;
-    const [wx, alerts] = await Promise.all([
+    const [wx, alerts, dwd] = await Promise.all([
       fetchWeather(loc.lat, loc.lon),
-      fetchAlerts(loc.lat, loc.lon)
+      fetchAlerts(loc.lat, loc.lon),
+      fetchDwdCurrent(loc.lat, loc.lon)
     ]);
     $('place').textContent = loc.name || await placeName(loc.lat, loc.lon);
     renderCurrent(wx); renderNowcast(wx); renderHourly(wx); renderDaily(wx);
     renderAlerts(alerts);
-    updateRadar(loc);
+    renderSources(wx.current, dwd);
+    updateMaps(loc);
   }catch(e){
     console.error(e);
     toast('Wetterdaten konnten nicht geladen werden. Tippe auf Aktualisieren.');
@@ -236,24 +271,62 @@ $('fs').addEventListener('click', async ()=>{
   }catch{ toast('Vollbild wird hier nicht unterstützt.'); }
 });
 
-/* ---------- radar (RainViewer tiles on a Leaflet/CARTO dark map) ---------- */
+/* ---------- weather maps (RainViewer radar + DWD radar / satellite) ---------- */
 const RV_API = 'https://api.rainviewer.com/public/weather-maps.json';
-let radarMap=null, radarLayer=null, radarCircle=null, radarDot=null;
-let radarRadiusKm=5, radarFrames=[], radarIdx=0, radarTimer=null, radarSized=false, radarPlaying=false;
+const DWD_WMS = 'https://maps.dwd.de/geoserver/dwd/wms';
+// RainViewer radar tiles top out at a low zoom; keep the view zoomed out so the
+// "Zoom level not supported" placeholder never appears, and cap the native zoom.
+const RADAR_ZOOM = 8, SAT_ZOOM = 5, RADAR_MAX_NATIVE = 8;
+let radarMap=null, radarLayer=null, radarDot=null, radarSized=false;
+let radarFrames=[], radarIdx=0, radarTimer=null, radarPlaying=false;
+let dwdMap=null, dwdDot=null, satMap=null, satDot=null;
 
-function initRadar(){
-  if(radarMap || typeof L === 'undefined') return;
-  const el=$('map'); if(!el) return;
-  radarMap = L.map(el, {
-    zoomControl:false, scrollWheelZoom:false, doubleClickZoom:false,
-    attributionControl:true, fadeAnimation:false
-  });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains:'abcd', maxZoom:19,
-    attribution:'© OpenStreetMap, © CARTO · Radar: RainViewer'
-  }).addTo(radarMap);
-  radarMap.setView([FALLBACK.lat, FALLBACK.lon], 9); // show the map before geolocation resolves
-  loadRadarFrames();
+function baseTiles(){
+  return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {subdomains:'abcd', maxZoom:19, attribution:'© OpenStreetMap, © CARTO'});
+}
+function locDot(){
+  return L.circleMarker([FALLBACK.lat, FALLBACK.lon],
+    {radius:5, color:'#e8b27a', weight:2, fillColor:'#e8b27a', fillOpacity:.9});
+}
+function plainMap(id){
+  const el=$(id); if(!el) return null;
+  return L.map(el, {zoomControl:false, scrollWheelZoom:false, doubleClickZoom:false,
+    attributionControl:true, fadeAnimation:false});
+}
+
+function initMaps(){
+  if(typeof L === 'undefined') return;
+  if(!radarMap){
+    radarMap = plainMap('map');
+    if(radarMap){
+      baseTiles().addTo(radarMap);
+      radarMap.setView([FALLBACK.lat, FALLBACK.lon], RADAR_ZOOM);
+      radarDot = locDot().addTo(radarMap);
+      loadRadarFrames();
+    }
+  }
+  if(!dwdMap){
+    dwdMap = plainMap('mapDwd');
+    if(dwdMap){
+      baseTiles().addTo(dwdMap);
+      L.tileLayer.wms(DWD_WMS, {layers:'dwd:Niederschlagsradar', format:'image/png',
+        transparent:true, version:'1.3.0', opacity:.75, attribution:'DWD'}).addTo(dwdMap);
+      dwdMap.setView([FALLBACK.lat, FALLBACK.lon], RADAR_ZOOM);
+      dwdDot = locDot().addTo(dwdMap);
+    }
+  }
+  if(!satMap){
+    satMap = plainMap('mapSat');
+    if(satMap){
+      baseTiles().addTo(satMap);
+      L.tileLayer.wms(DWD_WMS, {layers:'dwd:Satellite_meteosat_1km_euat_rgb_day_hrv_and_night_ir108_3h',
+        format:'image/png', transparent:true, version:'1.3.0', opacity:.85,
+        attribution:'DWD · EUMETSAT'}).addTo(satMap);
+      satMap.setView([FALLBACK.lat, FALLBACK.lon], SAT_ZOOM);
+      satDot = locDot().addTo(satMap);
+    }
+  }
 }
 
 async function loadRadarFrames(){
@@ -275,7 +348,7 @@ async function loadRadarFrames(){
 function showRadarFrame(i){
   const f=radarFrames[i]; if(!f || !radarMap) return;
   if(!radarLayer){
-    radarLayer = L.tileLayer(f.url, {opacity:.7, maxZoom:19, zIndex:300}).addTo(radarMap);
+    radarLayer = L.tileLayer(f.url, {opacity:.7, maxNativeZoom:RADAR_MAX_NATIVE, maxZoom:19, zIndex:300}).addTo(radarMap);
   }else{
     radarLayer.setUrl(f.url, false);
   }
@@ -308,36 +381,19 @@ function startRadarAnim(){
   radarSetPlaying(!matchMedia('(prefers-reduced-motion:reduce)').matches);
 }
 
-function fitRadar(){
-  if(radarMap && radarCircle) radarMap.fitBounds(radarCircle.getBounds(), {padding:[8,8], animate:false});
-}
-
-function updateRadar(loc){
-  initRadar();
-  if(!radarMap) return;
+function updateMaps(loc){
+  initMaps();
   const c=[loc.lat, loc.lon];
-  if(!radarDot){
-    radarDot = L.circleMarker(c, {radius:5, color:'#e8b27a', weight:2, fillColor:'#e8b27a', fillOpacity:.9}).addTo(radarMap);
-  }else radarDot.setLatLng(c);
-  if(!radarCircle){
-    radarCircle = L.circle(c, {radius:radarRadiusKm*1000, color:'rgba(238,242,247,.45)', weight:1, fill:false}).addTo(radarMap);
-  }else{
-    radarCircle.setLatLng(c); radarCircle.setRadius(radarRadiusKm*1000);
-  }
-  fitRadar();
-  // keep frames current on refresh, but don't interrupt a paused/scrubbing user
+  if(radarMap){ radarDot.setLatLng(c); radarMap.setView(c, RADAR_ZOOM, {animate:false}); }
+  if(dwdMap){ dwdDot.setLatLng(c); dwdMap.setView(c, RADAR_ZOOM, {animate:false}); }
+  if(satMap){ satDot.setLatLng(c); satMap.setView(c, SAT_ZOOM, {animate:false}); }
+  // refresh frames on update, but don't interrupt a paused/scrubbing user
   if(radarFrames.length && radarPlaying) loadRadarFrames();
-  if(!radarSized){ radarSized=true; setTimeout(()=>{ radarMap.invalidateSize(); fitRadar(); }, 200); }
+  if(!radarSized){ radarSized=true; setTimeout(()=>{
+    [radarMap, dwdMap, satMap].forEach(m=>m && m.invalidateSize());
+  }, 200); }
 }
 
-function setRadarRadius(km){
-  radarRadiusKm = km;
-  $('r5').classList.toggle('on', km===5);
-  $('r20').classList.toggle('on', km===20);
-  if(radarCircle){ radarCircle.setRadius(km*1000); fitRadar(); }
-}
-$('r5').addEventListener('click', ()=>setRadarRadius(5));
-$('r20').addEventListener('click', ()=>setRadarRadius(20));
 $('radarPlay').addEventListener('click', ()=>radarSetPlaying(!radarPlaying));
 $('radarSlider').addEventListener('input', e=>{
   radarSetPlaying(false);            // scrubbing pauses the loop
@@ -386,7 +442,7 @@ function initCompass(){
 /* ---------- init ---------- */
 tick(); setInterval(tick, 15000);
 initCompass();
-initRadar();   // bring up the map + radar frames independently of the weather fetch
+initMaps();   // bring up the maps independently of the weather fetch
 load();
 setInterval(load, REFRESH_MS);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) load(); });

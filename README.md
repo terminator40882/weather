@@ -7,13 +7,20 @@ severe-weather warnings.
 
 - **Forecast data:** [Open-Meteo](https://open-meteo.com) — keyless, CORS-enabled
   (`current`, `minutely_15` precipitation, wind, `hourly`, `daily`).
-- **Rain radar:** [RainViewer](https://www.rainviewer.com) radar tiles on a
-  [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
-  dark base map rendered with [Leaflet](https://leafletjs.com) (bundled in
-  `vendor/`, no CDN) — keyless. Centred on your position with a **5 km**
-  (default) / **20 km** toggle. It loops through the recent + nowcast frames,
-  and a thin scrubber lets you pause and step through the timeline.
-- **Warnings:** DWD via [Bright Sky](https://brightsky.dev) — keyless, CORS-enabled.
+- **Weather maps** (all keyless, CORS-enabled, on a [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
+  dark base map via [Leaflet](https://leafletjs.com), bundled in `vendor/`, no CDN):
+  - [RainViewer](https://www.rainviewer.com) precipitation radar, centred on
+    your position at a fixed regional zoom (so the radar tiles always render).
+    It loops through the recent + nowcast frames; a thin scrubber lets you
+    pause and step through the timeline.
+  - [DWD](https://www.dwd.de) `Niederschlagsradar` (precipitation radar,
+    Germany) via the DWD GeoServer WMS.
+  - DWD / EUMETSAT Meteosat satellite over Europe, also via the DWD WMS.
+  - Each map names its provider underneath.
+- **Current conditions from two providers, side by side:** Open-Meteo (DWD
+  ICON-D2 model) and the DWD station network via [Bright Sky](https://brightsky.dev),
+  each clearly attributed.
+- **Warnings:** DWD via Bright Sky — keyless, CORS-enabled.
 - **Location names:** BigDataCloud reverse geocoding (keyless).
 - **Compass-aligned wind:** when the device exposes an absolute orientation /
   compass heading, the wind arrow rotates to your viewing direction;

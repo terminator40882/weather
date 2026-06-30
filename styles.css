@@ -184,16 +184,10 @@ body{
 
 .loading .temp-val,.loading .cell-val,.loading #condition{opacity:.4}
 
-/* radar */
-.radar{border-top:1px solid var(--line);padding-top:20px}
-.radar-range{display:flex;gap:6px}
-.rbtn{
-  font:inherit;font-size:.72rem;font-weight:600;color:var(--mist-dim);
-  background:rgba(255,255,255,.05);border:1px solid var(--line);
-  padding:4px 11px;border-radius:999px;cursor:pointer;
-  transition:background .15s,color .15s,border-color .15s;
-}
-.rbtn.on{color:var(--ink);background:var(--warm);border-color:var(--warm)}
+/* weather maps */
+.radar{border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:18px}
+.map-card{display:flex;flex-direction:column;gap:7px}
+.map-credit{font-size:.66rem;color:var(--mist-faint);letter-spacing:.04em}
 .map-wrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
 .map{height:clamp(220px,42vw,300px);width:100%;background:#0c1322}
 .leaflet-container{background:#0c1322;font-family:inherit}
@@ -209,6 +203,23 @@ body{
 
 /* once aligned to the device heading, the arrow is no longer red */
 .compass-on .arrow{color:var(--warm)}
+
+/* provider comparison */
+.sources{border-top:1px solid var(--line);padding-top:20px}
+.src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.src{
+  border:1px solid var(--line);border-radius:14px;padding:13px 14px;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.05));
+  display:flex;flex-direction:column;gap:6px;min-width:0;
+}
+.src-prov{font-size:.84rem;font-weight:600;display:flex;flex-direction:column}
+.src-sub{
+  font-size:.62rem;color:var(--mist-faint);font-weight:400;
+  letter-spacing:.08em;text-transform:uppercase;margin-top:2px;
+}
+.src-t{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:2rem;line-height:1}
+.src-meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.72rem;color:var(--mist-dim)}
+.src-meta span{font-family:"Space Mono",monospace}
 
 /* radar scrubber */
 .radar-scrub{display:flex;align-items:center;gap:10px;margin-top:10px}
