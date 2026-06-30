@@ -100,7 +100,8 @@ function renderCurrent(d){
   $('wind').textContent = r0(c.wind_speed_10m);
   $('gust').textContent = r0(c.wind_gusts_10m)+' km/h';
   $('windDir').textContent = compass(c.wind_direction_10m);
-  $('windArrow').style.transform = `rotate(${(c.wind_direction_10m||0)+180}deg)`;
+  lastWindDir = c.wind_direction_10m;
+  applyWindRotation();
   $('humidity').textContent = r0(c.relative_humidity_2m);
   $('pressure').textContent = r0(c.surface_pressure);
   applySky(c.weather_code, day);
@@ -217,6 +218,7 @@ async function load(){
     $('place').textContent = loc.name || await placeName(loc.lat, loc.lon);
     renderCurrent(wx); renderNowcast(wx); renderHourly(wx); renderDaily(wx);
     renderAlerts(alerts);
+    updateRadar(loc);
   }catch(e){
     console.error(e);
     toast('Wetterdaten konnten nicht geladen werden. Tippe auf Aktualisieren.');
@@ -234,8 +236,138 @@ $('fs').addEventListener('click', async ()=>{
   }catch{ toast('Vollbild wird hier nicht unterstützt.'); }
 });
 
+/* ---------- radar (RainViewer tiles on a Leaflet/CARTO dark map) ---------- */
+const RV_API = 'https://api.rainviewer.com/public/weather-maps.json';
+let radarMap=null, radarLayer=null, radarCircle=null, radarDot=null;
+let radarRadiusKm=5, radarFrames=[], radarIdx=0, radarTimer=null, radarSized=false;
+
+function initRadar(){
+  if(radarMap || typeof L === 'undefined') return;
+  const el=$('map'); if(!el) return;
+  radarMap = L.map(el, {
+    zoomControl:false, scrollWheelZoom:false, doubleClickZoom:false,
+    attributionControl:true, fadeAnimation:false
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', maxZoom:19,
+    attribution:'© OpenStreetMap, © CARTO · Radar: RainViewer'
+  }).addTo(radarMap);
+  loadRadarFrames();
+}
+
+async function loadRadarFrames(){
+  try{
+    const r = await fetch(RV_API); if(!r.ok) return;
+    const j = await r.json();
+    const host = j.host;
+    const past = (j.radar && j.radar.past) || [];
+    const soon = (j.radar && j.radar.nowcast) || [];
+    radarFrames = past.concat(soon).map((f,i)=>({
+      time: f.time*1000,
+      forecast: i >= past.length,
+      url: `${host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`
+    }));
+    startRadarAnim();
+  }catch{ /* base map stays without overlay */ }
+}
+
+function showRadarFrame(i){
+  const f=radarFrames[i]; if(!f || !radarMap) return;
+  if(!radarLayer){
+    radarLayer = L.tileLayer(f.url, {opacity:.7, maxZoom:19, zIndex:300}).addTo(radarMap);
+  }else{
+    radarLayer.setUrl(f.url, false);
+  }
+  const lbl=$('radarTime');
+  if(lbl){
+    const t=new Date(f.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    lbl.textContent = (f.forecast ? '+ ' : '') + t;
+  }
+}
+
+function startRadarAnim(){
+  if(!radarFrames.length) return;
+  clearInterval(radarTimer);
+  radarIdx = radarFrames.length-1;
+  showRadarFrame(radarIdx);
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  radarTimer = setInterval(()=>{
+    radarIdx = (radarIdx+1) % radarFrames.length;
+    showRadarFrame(radarIdx);
+  }, 700);
+}
+
+function fitRadar(){
+  if(radarMap && radarCircle) radarMap.fitBounds(radarCircle.getBounds(), {padding:[8,8], animate:false});
+}
+
+function updateRadar(loc){
+  initRadar();
+  if(!radarMap) return;
+  const c=[loc.lat, loc.lon];
+  if(!radarDot){
+    radarDot = L.circleMarker(c, {radius:5, color:'#e8b27a', weight:2, fillColor:'#e8b27a', fillOpacity:.9}).addTo(radarMap);
+  }else radarDot.setLatLng(c);
+  if(!radarCircle){
+    radarCircle = L.circle(c, {radius:radarRadiusKm*1000, color:'rgba(238,242,247,.45)', weight:1, fill:false}).addTo(radarMap);
+  }else{
+    radarCircle.setLatLng(c); radarCircle.setRadius(radarRadiusKm*1000);
+  }
+  fitRadar();
+  if(radarFrames.length) loadRadarFrames(); // keep frames current on each refresh
+  if(!radarSized){ radarSized=true; setTimeout(()=>{ radarMap.invalidateSize(); fitRadar(); }, 200); }
+}
+
+function setRadarRadius(km){
+  radarRadiusKm = km;
+  $('r5').classList.toggle('on', km===5);
+  $('r20').classList.toggle('on', km===20);
+  if(radarCircle){ radarCircle.setRadius(km*1000); fitRadar(); }
+}
+$('r5').addEventListener('click', ()=>setRadarRadius(5));
+$('r20').addEventListener('click', ()=>setRadarRadius(20));
+
+/* ---------- compass: align the wind arrow to the viewing direction ---------- */
+let lastWindDir=null, devHeading=null, headingOn=false;
+
+function applyWindRotation(){
+  const a=$('windArrow'); if(!a || lastWindDir==null) return;
+  const base = lastWindDir + 180; // arrow points the way the wind blows to
+  a.style.transform = `rotate(${headingOn && devHeading!=null ? base - devHeading : base}deg)`;
+}
+function onOrient(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;      // iOS
+  else if(e.absolute === true && typeof e.alpha === 'number') h = (360 - e.alpha) % 360; // absolute orientation
+  if(h==null) return;
+  devHeading = h;
+  if(!headingOn){ headingOn=true; $('app').classList.add('compass-on'); }
+  applyWindRotation();
+}
+function attachOrient(){
+  window.addEventListener('deviceorientationabsolute', onOrient, true);
+  window.addEventListener('deviceorientation', onOrient, true);
+}
+function initCompass(){
+  if(!('DeviceOrientationEvent' in window)) return;
+  if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+    const b=$('compass'); if(!b) return;
+    b.hidden=false; // iOS needs an explicit, gesture-triggered grant
+    b.addEventListener('click', async ()=>{
+      try{
+        const res = await DeviceOrientationEvent.requestPermission();
+        if(res==='granted'){ attachOrient(); b.classList.add('on'); b.textContent='Kompass ✓'; }
+        else toast('Kompass-Zugriff abgelehnt.');
+      }catch{ toast('Kompass wird hier nicht unterstützt.'); }
+    });
+  }else{
+    attachOrient(); // Android / others: no explicit permission needed
+  }
+}
+
 /* ---------- init ---------- */
 tick(); setInterval(tick, 15000);
+initCompass();
 load();
 setInterval(load, REFRESH_MS);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) load(); });

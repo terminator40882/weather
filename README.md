@@ -1,13 +1,22 @@
 # Himmel — Wetter PWA
 
 A fullscreen progressive web app showing current conditions, a 2-hour
-precipitation nowcast, detailed wind, an hourly and 7-day forecast, and
-official DWD severe-weather warnings.
+precipitation nowcast, an animated rain radar centred on your location,
+detailed wind, an hourly and 7-day forecast, and official DWD
+severe-weather warnings.
 
 - **Forecast data:** [Open-Meteo](https://open-meteo.com) — keyless, CORS-enabled
   (`current`, `minutely_15` precipitation, wind, `hourly`, `daily`).
+- **Rain radar:** [RainViewer](https://www.rainviewer.com) radar tiles on a
+  [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
+  dark base map rendered with [Leaflet](https://leafletjs.com) — keyless.
+  Centred on your position with a **5 km** (default) / **20 km** toggle, and
+  it loops through the recent + nowcast frames.
 - **Warnings:** DWD via [Bright Sky](https://brightsky.dev) — keyless, CORS-enabled.
 - **Location names:** BigDataCloud reverse geocoding (keyless).
+- **Compass-aligned wind:** when the device exposes an absolute orientation /
+  compass heading, the wind arrow rotates to your viewing direction;
+  otherwise it stays north-up. On iOS, tap **Kompass** to grant motion access.
 - No backend, no API keys — everything runs client-side. Falls back to
   Frankfurt am Main if location access is denied.
 
@@ -68,5 +77,6 @@ There's also a **Vollbild** button for in-browser fullscreen.
 - All asset paths are relative, so the app works correctly from the
   `/weather/` subpath that Pages serves it under.
 - `.nojekyll` is included so GitHub serves every file untouched.
-- Attribution to Open-Meteo and DWD is shown in the footer, as their
+- Attribution to Open-Meteo and DWD is shown in the footer; the radar map
+  carries its own RainViewer, OpenStreetMap and CARTO attribution, as their
   licenses request.

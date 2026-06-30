@@ -1,5 +1,5 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v1';
+const CACHE = 'himmel-v2';
 const SHELL = [
   './',
   './index.html',

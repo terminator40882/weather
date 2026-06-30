@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 <body>
 <div class="sky" id="sky"></div>
@@ -53,6 +54,20 @@
     <div class="rain-axis"><span>jetzt</span><span>+1h</span><span>+2h</span></div>
   </section>
 
+  <section class="radar" aria-label="Regenradar">
+    <div class="panel-label">
+      <span>Regenradar</span>
+      <span class="radar-range">
+        <button id="r5" class="rbtn on" type="button">5 km</button>
+        <button id="r20" class="rbtn" type="button">20 km</button>
+      </span>
+    </div>
+    <div class="map-wrap">
+      <div id="map" class="map"></div>
+      <span id="radarTime" class="radar-time readout"></span>
+    </div>
+  </section>
+
   <section class="readouts" aria-label="Messwerte">
     <div class="cell">
       <span class="cell-label">Wind</span>
@@ -84,12 +99,14 @@
   <footer class="foot">
     <button id="refresh" class="btn" type="button">Aktualisieren</button>
     <button id="fs" class="btn" type="button">Vollbild</button>
+    <button id="compass" class="btn" type="button" hidden>Kompass</button>
     <span class="credit">Daten: Open-Meteo (DWD ICON-D2) · Warnungen: DWD via Bright Sky</span>
   </footer>
 </main>
 
 <div id="toast" class="toast" hidden></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
 </body>
 </html>
