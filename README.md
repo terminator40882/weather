@@ -10,23 +10,25 @@ severe-weather warnings.
 - **Weather maps** (all keyless, CORS-enabled, on a [CARTO](https://carto.com)/[OpenStreetMap](https://www.openstreetmap.org)
   dark base map via [Leaflet](https://leafletjs.com), bundled in `vendor/`, no CDN):
   - **Radar** — switchable between [RainViewer](https://www.rainviewer.com)
-    and [DWD](https://www.dwd.de) `Niederschlagsradar` (DWD GeoServer WMS) at
-    the press of a button (only one shown at a time), centred on your position
-    at a fixed regional zoom so the tiles always render. A thin scrubber steps
-    through the timeline — recent past **and** the forecast/nowcast into the
-    future. It opens on the current time and never auto-advances. Every frame
-    is preloaded as its own layer (opacity-swapped), so scrubbing the timeline
-    is instant with no re-fetching or stutter.
+    and [DWD](https://www.dwd.de) `Niederschlagsradar` (DWD GeoServer WMS,
+    **default**) at the press of a button (only one shown at a time), centred
+    on your position. Full container width in portrait; capped at 420px in
+    landscape so it doesn't stretch across a much wider-than-tall screen.
+    A thin scrubber steps through the timeline — recent past **and** the
+    forecast/nowcast into the future. It opens on the current time and never
+    auto-advances. Every frame is preloaded as its own layer (opacity-swapped),
+    so scrubbing the timeline is instant with no re-fetching or stutter.
   - The map names its provider underneath.
 - **7-day icons:** [Meteocons](https://bas.dev/work/meteocons) by Bas Milius
   (MIT), animated SVGs bundled in `vendor/icons/`, mapped from the WMO codes.
   Each day is split into **four 6-hour parts — nachts / morgens / mittags /
-  abends**. Each part shows one main icon for the **average/dominant** condition
-  (from the hourly `weather_code` series), and, if the part contains stronger
-  outliers, up to **two small icons** below it for the most extreme deviations
-  (e.g. mostly cloudy, with hail and drizzle shown underneath). Tapping a
-  6-hour part highlights it and expands an hourly temperature/condition
-  breakdown for that window below the day; expanding another part collapses
+  abends**, rendered full-bleed (edge to edge) for larger, clearer icons. Each
+  part shows one main icon for the **average/dominant** condition (from the
+  hourly `weather_code` series), and, if the part contains stronger outliers,
+  up to **two small icons** below it for the most extreme deviations (e.g.
+  mostly cloudy, with hail and drizzle shown underneath). Tapping a 6-hour
+  part highlights it and expands an hourly temperature/condition breakdown
+  for that window below the day; expanding another part collapses
   the previously open one (only one at a time, across all days).
 - **Wind & Feuchte, next to the temperature:** shown from Open-Meteo by
   default, switchable with one button to the DWD station network via

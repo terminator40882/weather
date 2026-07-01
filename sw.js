@@ -1,5 +1,5 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v12';
+const CACHE = 'himmel-v13';
 const WX_ICONS = ['clear-day','partly-cloudy-day','overcast-day','fog','fog-day',
   'drizzle','partly-cloudy-day-drizzle','rain','partly-cloudy-day-rain',
   'sleet','partly-cloudy-day-sleet','snow','partly-cloudy-day-snow',

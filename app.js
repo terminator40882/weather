@@ -276,10 +276,10 @@ function renderDaily(d){
       const wMain = wmo(s.main, true);
       const extras = s.extras.map(c=>{
         const wx=wmo(c,true);
-        return `<img class="dy-xic" src="${wxIcon(c)}" alt="${wx.label}" title="${wx.label}" width="16" height="16" loading="lazy" />`;
+        return `<img class="dy-xic" src="${wxIcon(c)}" alt="${wx.label}" title="${wx.label}" width="22" height="22" loading="lazy" />`;
       }).join('');
       return `<button class="dy-part" type="button" data-date="${date}" data-h0="${a}" data-h1="${b}" data-lbl="${lbl}">
-        <img class="dy-ic" src="${wxIcon(s.main)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="30" height="30" loading="lazy" />
+        <img class="dy-ic" src="${wxIcon(s.main)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="48" height="48" loading="lazy" />
         <span class="dy-extra">${extras}</span>
         <span class="lbl">${lbl}</span></button>`;
     }).join('');
@@ -324,7 +324,7 @@ $('daily').addEventListener('click', e=>{
     const hhmm = new Date(h.time[k]).toLocaleTimeString('de-DE',{hour:'2-digit'});
     return `<div class="dy-hr">
       <span class="t">${hhmm}</span>
-      <img class="ic" src="${wxIcon(h.weather_code[k])}" alt="${w.label}" title="${w.label}" width="26" height="26" loading="lazy" />
+      <img class="ic" src="${wxIcon(h.weather_code[k])}" alt="${w.label}" title="${w.label}" width="34" height="34" loading="lazy" />
       <span class="v">${r0(h.temperature_2m[k])}°</span>
     </div>`;
   }).join('') : `<p class="dy-empty">Keine Stundendaten für ${lbl}.</p>`;
@@ -393,7 +393,7 @@ const RADAR_ZOOM = 7, RADAR_MAX_NATIVE = 8;
 const DWD_STEP = 15*60000, DWD_BACK = 90*60000, DWD_FWD = 90*60000;
 
 const RV_OPACITY = .7, DWD_OPACITY = .75;
-let radarMap=null, radarDot=null, radarSized=false, radarSource='rv', radarShownIdx=0;
+let radarMap=null, radarDot=null, radarSized=false, radarSource='dwd', radarShownIdx=0;
 // one Leaflet layer per timeline frame, all preloaded at opacity 0 → scrubbing
 // only toggles opacity, so no tile reloads / stutter while swiping the timeline.
 let rvFrames=[], rvLayers=[], rvNowIdx=0, rvKey='';
@@ -458,8 +458,8 @@ function initMaps(){
       radarMap.setView([FALLBACK.lat, FALLBACK.lon], RADAR_ZOOM);
       radarDot = locDot().addTo(radarMap);
       buildDwdFrames(); buildDwdLayers();
-      setRadarSource('rv');
-      loadRvFrames();
+      setRadarSource('dwd');
+      loadRvFrames(); // preload RainViewer frames in the background too, so switching is instant
     }
   }
 }

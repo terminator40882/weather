@@ -163,21 +163,27 @@ body{
 .dy:last-child{border-bottom:0}
 .dy-top{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}
 .dy .d{font-size:.9rem;color:var(--mist)}
-.dy-parts{display:flex;gap:6px}
+/* full-bleed: the 6h parts span the full viewport width, breaking out of the
+   app's centered/padded column, so there's room for larger icons */
+.dy-parts{
+  display:flex;gap:8px;
+  position:relative;left:50%;width:100vw;margin-left:-50vw;
+  padding:0 var(--pad);box-sizing:border-box;
+}
 .dy-part{
-  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:7px 3px;border-radius:10px;border:1px solid var(--line);
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 4px;border-radius:12px;border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.045));
   font:inherit;color:inherit;cursor:pointer;transition:background .15s,border-color .15s;
 }
 .dy-part:hover{background:rgba(255,255,255,.07)}
 .dy-part.active{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 16%,transparent)}
 .dy-part.active .lbl{color:var(--warm)}
-.dy-part .dy-ic{width:32px;height:32px;display:block}
+.dy-part .dy-ic{width:48px;height:48px;display:block}
 /* extremes row: reserved height so the main icons stay aligned across sections */
-.dy-extra{display:flex;gap:2px;align-items:center;justify-content:center;min-height:16px}
-.dy-extra .dy-xic{width:16px;height:16px;display:block;opacity:.95}
-.dy-part .lbl{font-size:.58rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mist-faint)}
+.dy-extra{display:flex;gap:4px;align-items:center;justify-content:center;min-height:22px}
+.dy-extra .dy-xic{width:22px;height:22px;display:block;opacity:.95}
+.dy-part .lbl{font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mist-faint)}
 
 /* expanded hourly detail for a picked 6h part */
 .dy-detail{
@@ -185,12 +191,12 @@ body{
   border-top:1px dashed var(--line);margin-top:2px;
 }
 .dy-hr{
-  flex:0 0 auto;width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex:0 0 auto;width:54px;display:flex;flex-direction:column;align-items:center;gap:5px;
   padding:6px 2px;border-radius:9px;
 }
 .dy-hr .t{font-size:.62rem;color:var(--mist-dim);font-family:"Space Mono",monospace}
-.dy-hr .ic{width:26px;height:26px}
-.dy-hr .v{font-size:.82rem;font-weight:600}
+.dy-hr .ic{width:34px;height:34px}
+.dy-hr .v{font-size:.86rem;font-weight:600}
 .dy-empty{font-size:.74rem;color:var(--mist-faint);padding:6px 2px}
 .dy .range{display:flex;align-items:center;gap:8px;font-size:.86rem;width:clamp(140px,46vw,220px)}
 .dy .lo{color:var(--mist-dim);width:30px;text-align:right;font-family:"Space Mono",monospace}
@@ -228,7 +234,12 @@ body{
 /* weather maps */
 .radar{
   border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:18px;
-  max-width:420px;width:100%;margin-inline:auto;
+  width:100%;margin-inline:auto;
+}
+/* full width in portrait (viewport taller than wide); capped in landscape so it
+   doesn't stretch across a much wider-than-tall screen */
+@media (orientation:landscape){
+  .radar{max-width:420px}
 }
 .map-card{display:flex;flex-direction:column;gap:7px}
 .map-card .panel-label{margin-bottom:3px}
