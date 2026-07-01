@@ -14,7 +14,9 @@ severe-weather warnings.
     the press of a button (only one shown at a time), centred on your position
     at a fixed regional zoom so the tiles always render. A thin scrubber steps
     through the timeline — recent past **and** the forecast/nowcast into the
-    future. It opens on the current time and never auto-advances.
+    future. It opens on the current time and never auto-advances. Every frame
+    is preloaded as its own layer (opacity-swapped), so scrubbing the timeline
+    is instant with no re-fetching or stutter.
   - **Satellite** — DWD / EUMETSAT Meteosat over Europe (DWD WMS), with a
     button at the bottom of the page to expand it to fullscreen.
   - Each map names its provider underneath.

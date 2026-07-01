@@ -280,9 +280,12 @@ const RADAR_ZOOM = 7, SAT_ZOOM = 5, RADAR_MAX_NATIVE = 8;
 // DWD timeline: 5-min product; show recent past + ~90 min forecast, 15-min steps.
 const DWD_STEP = 15*60000, DWD_BACK = 90*60000, DWD_FWD = 90*60000;
 
-let radarMap=null, radarDot=null, radarSized=false, radarSource='rv';
-let rvLayer=null, rvFrames=[], rvNowIdx=0;
-let dwdLayer=null, dwdFrames=[], dwdNowIdx=0;
+const RV_OPACITY = .7, DWD_OPACITY = .75;
+let radarMap=null, radarDot=null, radarSized=false, radarSource='rv', radarShownIdx=0;
+// one Leaflet layer per timeline frame, all preloaded at opacity 0 → scrubbing
+// only toggles opacity, so no tile reloads / stutter while swiping the timeline.
+let rvFrames=[], rvLayers=[], rvNowIdx=0, rvKey='';
+let dwdFrames=[], dwdLayers=[], dwdNowIdx=0, dwdKey='';
 let satMap=null, satDot=null;
 
 function baseTiles(){
@@ -310,6 +313,31 @@ function buildDwdFrames(){
   }
 }
 
+function addLayers(arr){ if(radarMap) arr.forEach(l=>l.addTo(radarMap)); }
+function removeLayers(arr){ if(radarMap) arr.forEach(l=>radarMap.removeLayer(l)); }
+
+// (Re)build the preloaded layer pool for a source. Adding every frame layer to
+// the map (at opacity 0) makes the browser fetch all tiles up front.
+function buildRvLayers(){
+  const key = rvFrames.map(f=>f.url).join('|');
+  if(key===rvKey && rvLayers.length) return;
+  rvKey = key;
+  removeLayers(rvLayers);
+  rvLayers = rvFrames.map(f => L.tileLayer(f.url,
+    {opacity:0, maxNativeZoom:RADAR_MAX_NATIVE, maxZoom:19, zIndex:300}));
+  if(radarSource==='rv') addLayers(rvLayers);
+}
+function buildDwdLayers(){
+  const key = dwdFrames.map(f=>f.iso).join('|');
+  if(key===dwdKey && dwdLayers.length) return;
+  dwdKey = key;
+  removeLayers(dwdLayers);
+  dwdLayers = dwdFrames.map(f => L.tileLayer.wms(DWD_WMS,
+    {layers:'dwd:Niederschlagsradar', format:'image/png', transparent:true,
+     version:'1.3.0', time:f.iso, opacity:0, zIndex:300, attribution:'DWD'}));
+  if(radarSource==='dwd') addLayers(dwdLayers);
+}
+
 function initMaps(){
   if(typeof L === 'undefined') return;
   if(!radarMap){
@@ -318,10 +346,7 @@ function initMaps(){
       baseTiles().addTo(radarMap);
       radarMap.setView([FALLBACK.lat, FALLBACK.lon], RADAR_ZOOM);
       radarDot = locDot().addTo(radarMap);
-      rvLayer = L.tileLayer('', {opacity:.7, maxNativeZoom:RADAR_MAX_NATIVE, maxZoom:19, zIndex:300});
-      dwdLayer = L.tileLayer.wms(DWD_WMS, {layers:'dwd:Niederschlagsradar', format:'image/png',
-        transparent:true, version:'1.3.0', opacity:.75, zIndex:300, attribution:'DWD'});
-      buildDwdFrames();
+      buildDwdFrames(); buildDwdLayers();
       setRadarSource('rv');
       loadRvFrames();
     }
@@ -352,17 +377,21 @@ async function loadRvFrames(){
       url: `${host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`
     }));
     rvNowIdx = Math.max(0, past.length-1); // last observation ≈ now
+    buildRvLayers();
     if(radarSource==='rv') syncScrubber();
   }catch{ /* base map stays without overlay */ }
 }
 
 function radarFrames(){ return radarSource==='rv' ? rvFrames : dwdFrames; }
+function activeLayers(){ return radarSource==='rv' ? rvLayers : dwdLayers; }
 function radarNowIdx(){ return radarSource==='rv' ? rvNowIdx : dwdNowIdx; }
 
 function showFrame(i){
-  const fr = radarFrames(); const f = fr[i]; if(!f || !radarMap) return;
-  if(radarSource==='rv'){ rvLayer.setUrl(f.url, false); }
-  else { dwdLayer.setParams({ time: f.iso }); }
+  const fr = radarFrames(); const layers = activeLayers();
+  const f = fr[i]; if(!f || !layers[i]) return;
+  const op = radarSource==='rv' ? RV_OPACITY : DWD_OPACITY;
+  layers.forEach((l,k)=>l.setOpacity(k===i ? op : 0)); // preloaded → instant swap
+  radarShownIdx = i;
   const lbl=$('radarTime');
   if(lbl){
     const hhmm = new Date(f.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
@@ -385,10 +414,8 @@ function setRadarSource(src){
   radarSource = src;
   $('srcRv').classList.toggle('on', src==='rv');
   $('srcDwd').classList.toggle('on', src==='dwd');
-  if(radarMap){
-    if(src==='rv'){ if(dwdLayer) radarMap.removeLayer(dwdLayer); if(rvLayer) rvLayer.addTo(radarMap); }
-    else { if(rvLayer) radarMap.removeLayer(rvLayer); if(dwdLayer) dwdLayer.addTo(radarMap); }
-  }
+  removeLayers(src==='rv' ? dwdLayers : rvLayers);
+  addLayers(src==='rv' ? rvLayers : dwdLayers);
   const cr=$('radarCredit');
   if(cr) cr.textContent = src==='rv'
     ? 'Niederschlagsradar — RainViewer'
@@ -401,7 +428,7 @@ function updateMaps(loc){
   const c=[loc.lat, loc.lon];
   if(radarMap){ radarDot.setLatLng(c); radarMap.setView(c, RADAR_ZOOM, {animate:false}); }
   if(satMap){ satDot.setLatLng(c); satMap.setView(c, SAT_ZOOM, {animate:false}); }
-  buildDwdFrames();
+  buildDwdFrames(); buildDwdLayers();
   if(radarSource==='rv') loadRvFrames(); else syncScrubber();
   if(!radarSized){ radarSized=true; setTimeout(()=>{
     [radarMap, satMap].forEach(m=>m && m.invalidateSize());

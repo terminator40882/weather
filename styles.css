@@ -228,6 +228,12 @@ body.sat-open{overflow:hidden}
 /* once aligned to the device heading, the arrow is no longer red */
 .compass-on .arrow{color:var(--warm)}
 
+.section-src{
+  grid-column:1/-1;font-size:.66rem;color:var(--mist-faint);
+  letter-spacing:.03em;line-height:1.4;margin-top:2px;
+}
+.section-src strong{color:var(--mist-dim);font-weight:600}
+
 /* provider comparison */
 .sources{border-top:1px solid var(--line);padding-top:20px}
 .src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
