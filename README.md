@@ -24,10 +24,14 @@ severe-weather warnings.
   abends**. Each part shows one main icon for the **average/dominant** condition
   (from the hourly `weather_code` series), and, if the part contains stronger
   outliers, up to **two small icons** below it for the most extreme deviations
-  (e.g. mostly cloudy, with hail and drizzle shown underneath).
-- **Current conditions from two providers, side by side:** Open-Meteo (DWD
-  ICON-D2 model) and the DWD station network via [Bright Sky](https://brightsky.dev),
-  each clearly attributed.
+  (e.g. mostly cloudy, with hail and drizzle shown underneath). Tapping a
+  6-hour part highlights it and expands an hourly temperature/condition
+  breakdown for that window below the day; expanding another part collapses
+  the previously open one (only one at a time, across all days).
+- **Wind & Feuchte, next to the temperature:** shown from Open-Meteo by
+  default, switchable with one button to the DWD station network via
+  [Bright Sky](https://brightsky.dev) — the caption underneath always names
+  the active provider.
 - **Warnings:** DWD via Bright Sky — keyless, CORS-enabled.
 - **Location names:** BigDataCloud reverse geocoding (keyless).
 - **Compass-aligned wind:** when the device exposes an absolute orientation /

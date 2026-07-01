@@ -34,15 +34,40 @@
   </header>
 
   <section class="hero" aria-label="Aktuelles Wetter">
-    <div class="hero-glyph" id="heroGlyph" aria-hidden="true">·</div>
-    <div class="hero-temp">
-      <span id="temp" class="temp-val">--</span><span class="temp-unit">°</span>
+    <div class="hero-row">
+      <div class="hero-main">
+        <div class="hero-glyph" id="heroGlyph" aria-hidden="true">·</div>
+        <div class="hero-temp">
+          <span id="temp" class="temp-val">--</span><span class="temp-unit">°</span>
+        </div>
+        <div class="hero-meta">
+          <span id="condition">—</span>
+          <span class="sep">/</span>
+          <span id="feels" class="readout">gefühlt --°</span>
+        </div>
+      </div>
+      <div class="hero-cells">
+        <div class="cell">
+          <span class="cell-label">Wind</span>
+          <span class="cell-val"><span id="wind" class="readout">--</span> <span class="unit">km/h</span></span>
+          <span class="cell-sub"><span id="windArrow" class="arrow" aria-hidden="true">↑</span> <span id="windDir" class="readout">—</span> · Böen <span id="gust" class="readout">--</span></span>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Feuchte</span>
+          <span class="cell-val"><span id="humidity" class="readout">--</span> <span class="unit">%</span></span>
+          <span class="cell-sub">Taupunkt <span id="dew" class="readout">--°</span></span>
+        </div>
+      </div>
     </div>
-    <div class="hero-meta">
-      <span id="condition">—</span>
-      <span class="sep">/</span>
-      <span id="feels" class="readout">gefühlt --°</span>
+    <div class="src-toggle">
+      <button id="srcToggle" class="rbtn" type="button">Zu DWD wechseln</button>
+      <span id="srcCaption" class="src-caption">Wind &amp; Feuchte: Open-Meteo (Modell DWD ICON-D2)</span>
     </div>
+  </section>
+
+  <section class="hourly" aria-label="Stündliche Vorhersage">
+    <div class="panel-label"><span>Stündlich</span></div>
+    <div id="hourly" class="hourly-track"></div>
   </section>
 
   <section class="nowcast" aria-label="Niederschlag, nächste zwei Stunden">
@@ -72,35 +97,6 @@
       </div>
       <span id="radarCredit" class="map-credit">Niederschlagsradar — RainViewer</span>
     </div>
-  </section>
-
-  <section class="readouts" aria-label="Messwerte">
-    <div class="cell">
-      <span class="cell-label">Wind</span>
-      <span class="cell-val"><span id="wind" class="readout">--</span> <span class="unit">km/h</span></span>
-      <span class="cell-sub"><span id="windArrow" class="arrow" aria-hidden="true">↑</span> <span id="windDir" class="readout">—</span> · Böen <span id="gust" class="readout">--</span></span>
-    </div>
-    <div class="cell">
-      <span class="cell-label">Feuchte</span>
-      <span class="cell-val"><span id="humidity" class="readout">--</span> <span class="unit">%</span></span>
-      <span class="cell-sub">Taupunkt <span id="dew" class="readout">--°</span></span>
-    </div>
-    <div class="cell">
-      <span class="cell-label">Druck</span>
-      <span class="cell-val"><span id="pressure" class="readout">----</span> <span class="unit">hPa</span></span>
-      <span class="cell-sub">Sicht <span id="vis" class="readout">--</span></span>
-    </div>
-    <p class="section-src">Aktuell, gefühlt, Wind, Feuchte, Druck, stündlich &amp; 7-Tage: <strong>Open-Meteo</strong> (Modell DWD ICON-D2)</p>
-  </section>
-
-  <section class="sources" aria-label="Datenquellen im Vergleich">
-    <div class="panel-label"><span>Quellen im Vergleich</span></div>
-    <div id="srcGrid" class="src-grid"></div>
-  </section>
-
-  <section class="hourly" aria-label="Stündliche Vorhersage">
-    <div class="panel-label"><span>Stündlich</span></div>
-    <div id="hourly" class="hourly-track"></div>
   </section>
 
   <section class="daily" aria-label="7-Tage-Vorhersage">

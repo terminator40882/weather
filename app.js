@@ -95,9 +95,9 @@ async function fetchWeather(lat, lon){
   const u = new URL('https://api.open-meteo.com/v1/forecast');
   u.search = new URLSearchParams({
     latitude:lat, longitude:lon, timezone:'auto', forecast_days:7,
-    current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
     minutely_15:'precipitation',
-    hourly:'temperature_2m,precipitation_probability,weather_code,dew_point_2m,visibility',
+    hourly:'temperature_2m,precipitation_probability,weather_code,dew_point_2m',
     daily:'weather_code,temperature_2m_max,temperature_2m_min'
   }).toString();
   const r = await fetch(u); if(!r.ok) throw new Error('Open-Meteo '+r.status);
@@ -127,23 +127,49 @@ function renderCurrent(d){
   $('heroGlyph').textContent = w.glyph;
   $('condition').textContent = w.label;
   $('feels').textContent = 'gefühlt '+r0(c.apparent_temperature)+'°';
-  $('wind').textContent = r0(c.wind_speed_10m);
-  $('gust').textContent = r0(c.wind_gusts_10m)+' km/h';
-  $('windDir').textContent = compass(c.wind_direction_10m);
-  lastWindDir = c.wind_direction_10m;
-  applyWindRotation();
-  $('humidity').textContent = r0(c.relative_humidity_2m);
-  $('pressure').textContent = r0(c.surface_pressure);
   applySky(c.weather_code, day);
 
-  // dew point + visibility from hourly at current hour
+  // dew point from hourly at the current hour (Open-Meteo has no dew point in `current`)
   const idx = nearestHourIdx(d.hourly.time);
-  if(idx>=0){
-    $('dew').textContent = r0(d.hourly.dew_point_2m[idx])+'°';
-    const v = d.hourly.visibility[idx];
-    $('vis').textContent = v==null ? '--' : (v>=1000 ? (v/1000).toFixed(0)+' km' : v+' m');
-  }
+  LAST_DEW_OM = idx>=0 ? d.hourly.dew_point_2m[idx] : null;
 }
+
+// Wind + Feuchte are shown from one of two independent providers, switchable
+// via #srcToggle. Open-Meteo's `current` block has no dew point, so that one
+// value is taken from the hourly series regardless of the active source... unless
+// DWD is active and provides its own station dew point.
+let dataSrc='om', LAST_OM=null, LAST_DWD=null, LAST_DEW_OM=null;
+
+function renderReadouts(){
+  const om=LAST_OM, dwd=LAST_DWD;
+  const useDwd = dataSrc==='dwd' && dwd;
+  const wind = useDwd ? dwd.wind_speed_10 : om && om.wind_speed_10m;
+  const gust = useDwd ? dwd.wind_gust_speed_10 : om && om.wind_gusts_10m;
+  const dir  = useDwd ? dwd.wind_direction_10 : om && om.wind_direction_10m;
+  const hum  = useDwd ? dwd.relative_humidity : om && om.relative_humidity_2m;
+  const dew  = useDwd ? dwd.dew_point : LAST_DEW_OM;
+
+  $('wind').textContent = r0(wind);
+  $('gust').textContent = r0(gust)+' km/h';
+  $('windDir').textContent = dir==null ? '—' : compass(dir);
+  lastWindDir = dir; applyWindRotation();
+  $('humidity').textContent = r0(hum);
+  $('dew').textContent = (dew==null ? '--' : r0(dew))+'°';
+
+  const cap=$('srcCaption');
+  if(cap) cap.textContent = useDwd
+    ? 'Wind & Feuchte: DWD Messnetz (via Bright Sky)'
+    : 'Wind & Feuchte: Open-Meteo (Modell DWD ICON-D2)';
+  const btn=$('srcToggle');
+  if(btn) btn.textContent = useDwd ? 'Zu Open-Meteo wechseln' : 'Zu DWD wechseln';
+}
+
+$('srcToggle').addEventListener('click', ()=>{
+  const target = dataSrc==='om' ? 'dwd' : 'om';
+  if(target==='dwd' && !LAST_DWD){ toast('DWD-Daten nicht verfügbar.'); return; }
+  dataSrc = target;
+  renderReadouts();
+});
 function nearestHourIdx(times){
   const now = Date.now();
   let best=-1, bd=Infinity;
@@ -252,10 +278,10 @@ function renderDaily(d){
         const wx=wmo(c,true);
         return `<img class="dy-xic" src="${wxIcon(c)}" alt="${wx.label}" title="${wx.label}" width="16" height="16" loading="lazy" />`;
       }).join('');
-      return `<span class="dy-part">
+      return `<button class="dy-part" type="button" data-date="${date}" data-h0="${a}" data-h1="${b}" data-lbl="${lbl}">
         <img class="dy-ic" src="${wxIcon(s.main)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="30" height="30" loading="lazy" />
         <span class="dy-extra">${extras}</span>
-        <span class="lbl">${lbl}</span></span>`;
+        <span class="lbl">${lbl}</span></button>`;
     }).join('');
     const el=document.createElement('div'); el.className='dy';
     el.innerHTML=`<div class="dy-top">
@@ -264,10 +290,46 @@ function renderDaily(d){
           <span class="bar"><i style="left:${left}%;width:${Math.max(6,width)}%"></i></span>
           <span class="hi">${r0(hh)}°</span></span>
       </div>
-      <div class="dy-parts">${parts}</div>`;
+      <div class="dy-parts">${parts}</div>
+      <div class="dy-detail" hidden></div>`;
     wrap.appendChild(el);
   });
 }
+
+// clicking a 6h part highlights it and expands an hourly breakdown for that
+// window below its day row; expanding a new one collapses whichever was open.
+$('daily').addEventListener('click', e=>{
+  const btn = e.target.closest('.dy-part'); if(!btn) return;
+  const dy = btn.closest('.dy');
+  const detail = dy.querySelector('.dy-detail');
+  const wasActive = btn.classList.contains('active');
+
+  document.querySelectorAll('#daily .dy-part.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#daily .dy-detail').forEach(p=>{ p.hidden=true; p.innerHTML=''; });
+  if(wasActive) return; // toggled off
+
+  btn.classList.add('active');
+  const { date, h0, h1, lbl } = btn.dataset;
+  const h = LAST_WX && LAST_WX.hourly;
+  if(!h){ detail.hidden=false; detail.innerHTML='<p class="dy-empty">Keine Daten.</p>'; return; }
+  const rows=[];
+  for(let k=0;k<h.time.length;k++){
+    const tt=h.time[k]; if(tt.slice(0,10)!==date) continue;
+    const hr=+tt.slice(11,13); if(hr<+h0 || hr>+h1) continue;
+    rows.push(k);
+  }
+  detail.innerHTML = rows.length ? rows.map(k=>{
+    const day = isDaytime(null, h.time[k]);
+    const w = wmo(h.weather_code[k], day);
+    const hhmm = new Date(h.time[k]).toLocaleTimeString('de-DE',{hour:'2-digit'});
+    return `<div class="dy-hr">
+      <span class="t">${hhmm}</span>
+      <img class="ic" src="${wxIcon(h.weather_code[k])}" alt="${w.label}" title="${w.label}" width="26" height="26" loading="lazy" />
+      <span class="v">${r0(h.temperature_2m[k])}°</span>
+    </div>`;
+  }).join('') : `<p class="dy-empty">Keine Stundendaten für ${lbl}.</p>`;
+  detail.hidden=false;
+});
 
 function renderAlerts(alerts){
   const box=$('alerts');
@@ -286,33 +348,8 @@ function renderAlerts(alerts){
   box.hidden=false;
 }
 
-// current conditions from each provider, side by side, with clear attribution
-function renderSources(om, dwd){
-  const grid=$('srcGrid'); if(!grid) return;
-  const cards=[{
-    prov:'Open-Meteo', sub:'Modell DWD ICON-D2',
-    t:om && om.temperature_2m, w:om && om.wind_speed_10m,
-    h:om && om.relative_humidity_2m, p:om && om.surface_pressure
-  }];
-  if(dwd) cards.push({
-    prov:'DWD Messnetz', sub:'via Bright Sky',
-    t:dwd.temperature, w:dwd.wind_speed_10,
-    h:dwd.relative_humidity, p:dwd.pressure_msl
-  });
-  grid.innerHTML = cards.map(c=>`
-    <div class="src">
-      <div class="src-prov">${c.prov}<span class="src-sub">${c.sub}</span></div>
-      <div class="src-t">${r0(c.t)}°</div>
-      <div class="src-meta">
-        <span>Wind ${r0(c.w)} km/h</span>
-        <span>Feuchte ${r0(c.h)} %</span>
-        <span>Druck ${r0(c.p)} hPa</span>
-      </div>
-    </div>`).join('');
-}
-
 /* ---------- orchestration ---------- */
-let CURRENT=null;
+let CURRENT=null, LAST_WX=null;
 async function load(){
   document.body.classList.add('loading');
   try{
@@ -323,10 +360,11 @@ async function load(){
       fetchAlerts(loc.lat, loc.lon),
       fetchDwdCurrent(loc.lat, loc.lon)
     ]);
+    LAST_WX = wx; LAST_OM = wx.current; LAST_DWD = dwd;
     $('place').textContent = loc.name || await placeName(loc.lat, loc.lon);
-    renderCurrent(wx); renderNowcast(wx); renderHourly(wx); renderDaily(wx);
+    renderCurrent(wx); renderReadouts();
+    renderNowcast(wx); renderHourly(wx); renderDaily(wx);
     renderAlerts(alerts);
-    renderSources(wx.current, dwd);
     updateMaps(loc);
   }catch(e){
     console.error(e);

@@ -66,20 +66,31 @@ body{
 .eyebrow .dot{opacity:.5}
 
 /* hero */
-.hero{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-.hero-glyph{font-size:clamp(46px,16vw,76px);line-height:1}
+.hero{display:flex;flex-direction:column;gap:14px}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hero-main{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.hero-glyph{font-size:clamp(40px,14vw,64px);line-height:1}
 .hero-temp{display:flex;align-items:flex-start;line-height:.82}
 .temp-val{
   font-family:"Big Shoulders Display",sans-serif;font-weight:800;
-  font-size:clamp(116px,40vw,176px);letter-spacing:-.01em;
+  font-size:clamp(90px,30vw,140px);letter-spacing:-.01em;
 }
 .temp-unit{
   font-family:"Big Shoulders Display",sans-serif;font-weight:500;
-  font-size:clamp(40px,14vw,64px);color:var(--warm);margin-top:.12em;
+  font-size:clamp(32px,11vw,50px);color:var(--warm);margin-top:.12em;
 }
 .hero-meta{display:flex;align-items:baseline;gap:10px;font-size:1.02rem;flex-wrap:wrap}
 #condition{font-weight:600}
 .hero-meta .sep{color:var(--mist-faint)}
+
+/* wind + feuchte, next to the temperature */
+.hero-cells{display:flex;flex-direction:column;gap:10px;flex:0 0 auto;width:clamp(120px,32vw,168px)}
+.hero-cells .cell{padding:11px 12px 12px}
+.hero-cells .cell-val{font-size:1.24rem}
+
+/* provider toggle for wind/humidity */
+.src-toggle{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.src-caption{font-size:.66rem;color:var(--mist-faint);letter-spacing:.03em}
 
 /* shared panel label */
 .panel-label{
@@ -110,8 +121,7 @@ body{
   font-size:.7rem;color:var(--mist-faint);font-family:"Space Mono",monospace;
 }
 
-/* readouts grid */
-.readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+/* Wind/Feuchte cells */
 .cell{
   border:1px solid var(--line);border-radius:14px;padding:13px 13px 14px;
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.05));
@@ -156,12 +166,30 @@ body{
   flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:7px 3px;border-radius:10px;border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.045));
+  font:inherit;color:inherit;cursor:pointer;transition:background .15s,border-color .15s;
 }
+.dy-part:hover{background:rgba(255,255,255,.07)}
+.dy-part.active{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 16%,transparent)}
+.dy-part.active .lbl{color:var(--warm)}
 .dy-part .dy-ic{width:32px;height:32px;display:block}
 /* extremes row: reserved height so the main icons stay aligned across sections */
 .dy-extra{display:flex;gap:2px;align-items:center;justify-content:center;min-height:16px}
 .dy-extra .dy-xic{width:16px;height:16px;display:block;opacity:.95}
 .dy-part .lbl{font-size:.58rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mist-faint)}
+
+/* expanded hourly detail for a picked 6h part */
+.dy-detail{
+  display:flex;gap:4px;overflow-x:auto;padding:10px 2px 2px;
+  border-top:1px dashed var(--line);margin-top:2px;
+}
+.dy-hr{
+  flex:0 0 auto;width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 2px;border-radius:9px;
+}
+.dy-hr .t{font-size:.62rem;color:var(--mist-dim);font-family:"Space Mono",monospace}
+.dy-hr .ic{width:26px;height:26px}
+.dy-hr .v{font-size:.82rem;font-weight:600}
+.dy-empty{font-size:.74rem;color:var(--mist-faint);padding:6px 2px}
 .dy .range{display:flex;align-items:center;gap:8px;font-size:.86rem;width:clamp(140px,46vw,220px)}
 .dy .lo{color:var(--mist-dim);width:30px;text-align:right;font-family:"Space Mono",monospace}
 .dy .hi{width:30px;font-family:"Space Mono",monospace}
@@ -224,29 +252,6 @@ body{
 
 /* once aligned to the device heading, the arrow is no longer red */
 .compass-on .arrow{color:var(--warm)}
-
-.section-src{
-  grid-column:1/-1;font-size:.66rem;color:var(--mist-faint);
-  letter-spacing:.03em;line-height:1.4;margin-top:2px;
-}
-.section-src strong{color:var(--mist-dim);font-weight:600}
-
-/* provider comparison */
-.sources{border-top:1px solid var(--line);padding-top:20px}
-.src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.src{
-  border:1px solid var(--line);border-radius:14px;padding:13px 14px;
-  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.05));
-  display:flex;flex-direction:column;gap:6px;min-width:0;
-}
-.src-prov{font-size:.84rem;font-weight:600;display:flex;flex-direction:column}
-.src-sub{
-  font-size:.62rem;color:var(--mist-faint);font-weight:400;
-  letter-spacing:.08em;text-transform:uppercase;margin-top:2px;
-}
-.src-t{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:2rem;line-height:1}
-.src-meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.72rem;color:var(--mist-dim)}
-.src-meta span{font-family:"Space Mono",monospace}
 
 /* radar scrubber */
 .radar-scrub{display:flex;align-items:center;gap:10px;margin-top:10px}
