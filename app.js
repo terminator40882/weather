@@ -584,5 +584,17 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) load();
 
 /* ---------- service worker ---------- */
 if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  // updateViaCache:'none' stops the browser's own HTTP cache from serving a
+  // stale sw.js for up to 24h, which otherwise delays picking up new deploys.
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(swReloaded) return; swReloaded=true; location.reload();
+  });
+  window.addEventListener('load', async ()=>{
+    try{
+      const reg = await navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
+      reg.update();
+      document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) reg.update(); });
+    }catch{}
+  });
 }
