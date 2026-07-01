@@ -20,16 +20,25 @@ const WMO = {
 };
 const wmo = (c, day) => { const e = WMO[c] || ['—','·','·']; return { label:e[0], glyph: day ? e[1] : e[2] }; };
 
-/* WMO code -> Meteocons (bundled in vendor/icons); daytime variants for the 7-day view */
+/* WMO code -> Meteocons (bundled in vendor/icons), daytime variants for the 7-day view.
+   Meteocons has no light/heavy tiers, so intensity is approximated with the two
+   available levels: 'partly-cloudy-day-X' (light/intermittent) vs the fuller 'X'. */
 const WMO_ICON = {
   0:'clear-day', 1:'clear-day', 2:'partly-cloudy-day', 3:'overcast-day',
-  45:'fog-day', 48:'fog-day',
-  51:'drizzle', 53:'drizzle', 55:'drizzle', 56:'sleet', 57:'sleet',
-  61:'rain', 63:'rain', 65:'rain', 66:'sleet', 67:'sleet',
-  71:'snow', 73:'snow', 75:'snow', 77:'snow',
+  45:'fog', 48:'fog',
+  // drizzle: light -> partly-cloudy variant, moderate/heavy -> drizzle; freezing -> sleet
+  51:'partly-cloudy-day-drizzle', 53:'drizzle', 55:'drizzle',
+  56:'partly-cloudy-day-sleet', 57:'sleet',
+  // rain: light -> partly-cloudy, moderate/heavy -> rain; freezing -> sleet
+  61:'partly-cloudy-day-rain', 63:'rain', 65:'rain',
+  66:'partly-cloudy-day-sleet', 67:'sleet',
+  // snow: light -> partly-cloudy, moderate/heavy -> snow
+  71:'partly-cloudy-day-snow', 73:'snow', 75:'snow', 77:'snow',
+  // showers are intermittent by nature -> partly-cloudy for light, fuller otherwise
   80:'partly-cloudy-day-rain', 81:'rain', 82:'rain',
   85:'partly-cloudy-day-snow', 86:'snow',
-  95:'thunderstorms', 96:'thunderstorms-rain', 99:'thunderstorms-rain'
+  // thunderstorms: dry vs with precipitation/hail
+  95:'thunderstorms-day', 96:'thunderstorms-day-rain', 99:'thunderstorms-rain'
 };
 const wxIcon = c => `vendor/icons/${WMO_ICON[c] || 'overcast-day'}.svg`;
 

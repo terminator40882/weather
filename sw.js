@@ -1,8 +1,10 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v7';
-const WX_ICONS = ['clear-day','partly-cloudy-day','overcast-day','fog-day','drizzle',
-  'sleet','rain','snow','partly-cloudy-day-rain','partly-cloudy-day-snow',
-  'thunderstorms','thunderstorms-rain'].map(n => `./vendor/icons/${n}.svg`);
+const CACHE = 'himmel-v8';
+const WX_ICONS = ['clear-day','partly-cloudy-day','overcast-day','fog','fog-day',
+  'drizzle','partly-cloudy-day-drizzle','rain','partly-cloudy-day-rain',
+  'sleet','partly-cloudy-day-sleet','snow','partly-cloudy-day-snow',
+  'thunderstorms','thunderstorms-day','thunderstorms-day-rain','thunderstorms-rain'
+  ].map(n => `./vendor/icons/${n}.svg`);
 const SHELL = [
   './',
   './index.html',
