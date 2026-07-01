@@ -252,7 +252,19 @@ body{
 }
 .rbtn.on{color:var(--ink);background:var(--warm);border-color:var(--warm)}
 .map-credit{font-size:.66rem;color:var(--mist-faint);letter-spacing:.04em}
-.map-wrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+/* the map itself is full-bleed (true screen edges), breaking out of the app's
+   padded content column — same technique as the 7-day .dy-parts row.
+   Labels/scrubber/credit stay inside the normal padding so they're readable. */
+.map-wrap{
+  position:relative;left:50%;width:100vw;margin-left:-50vw;
+  overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+@media (orientation:landscape){
+  .map-wrap{
+    position:static;left:auto;width:100%;margin-left:0;
+    max-width:420px;margin-inline:auto;border-radius:14px;border:1px solid var(--line);
+  }
+}
 
 .map{height:clamp(220px,42vw,300px);width:100%;background:#0c1322}
 .leaflet-container{background:#0c1322;font-family:inherit}

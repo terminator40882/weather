@@ -584,12 +584,19 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) load();
 
 /* ---------- service worker ---------- */
 if('serviceWorker' in navigator){
-  // updateViaCache:'none' stops the browser's own HTTP cache from serving a
-  // stale sw.js for up to 24h, which otherwise delays picking up new deploys.
+  // Our SW calls clients.claim() on activate, which fires 'controllerchange'
+  // even on a brand-new, first-ever visit (uncontrolled page gaining a
+  // controller) — not just on genuine updates. Only auto-reload when this
+  // page was ALREADY controlled by a previous SW, i.e. a real version swap;
+  // otherwise a fresh visit would reload itself for no reason.
+  const hadController = !!navigator.serviceWorker.controller;
   let swReloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange', ()=>{
-    if(swReloaded) return; swReloaded=true; location.reload();
+    if(!hadController || swReloaded) return;
+    swReloaded=true; location.reload();
   });
+  // updateViaCache:'none' stops the browser's own HTTP cache from serving a
+  // stale sw.js for up to 24h, which otherwise delays picking up new deploys.
   window.addEventListener('load', async ()=>{
     try{
       const reg = await navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
