@@ -20,8 +20,11 @@ severe-weather warnings.
   - The map names its provider underneath.
 - **7-day icons:** [Meteocons](https://bas.dev/work/meteocons) by Bas Milius
   (MIT), animated SVGs bundled in `vendor/icons/`, mapped from the WMO codes.
-  Each day shows **three icons — morgens / mittags / abends** — derived from the
-  hourly `weather_code` series (the most notable code in each part of the day).
+  Each day is split into **four 6-hour parts — nachts / morgens / mittags /
+  abends**. Each part shows one main icon for the **average/dominant** condition
+  (from the hourly `weather_code` series), and, if the part contains stronger
+  outliers, up to **two small icons** below it for the most extreme deviations
+  (e.g. mostly cloudy, with hail and drizzle shown underneath).
 - **Current conditions from two providers, side by side:** Open-Meteo (DWD
   ICON-D2 model) and the DWD station network via [Bright Sky](https://brightsky.dev),
   each clearly attributed.

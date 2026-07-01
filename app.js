@@ -202,22 +202,37 @@ function isDaytime(d, iso){
 const WMO_RANK = {0:0,1:1,2:2,3:3,45:4,48:4,51:5,53:6,55:7,56:7,57:8,
   61:6,63:8,65:10,66:8,67:10,71:6,73:8,75:10,77:6,
   80:7,81:9,82:11,85:7,86:9,95:12,96:13,99:14};
-const DAY_PARTS = [['morgens',6,11],['mittags',12,17],['abends',18,23]];
+const rank = c => WMO_RANK[c] ?? 0;
+// four 6-hour parts of the day
+const DAY_PARTS = [['nachts',0,5],['morgens',6,11],['mittags',12,17],['abends',18,23]];
 
-// most notable weather code within [h0,h1] of the given local date, or null
-function partCode(hourly, date, h0, h1){
-  if(!hourly || !hourly.time) return null;
-  let best=null, bestRank=-1;
+// weather codes within [h0,h1] of the given local date
+function sectionCodes(hourly, date, h0, h1){
+  const out=[];
+  if(!hourly || !hourly.time) return out;
   for(let k=0;k<hourly.time.length;k++){
     const t=hourly.time[k];
     if(t.slice(0,10)!==date) continue;
     const hr=+t.slice(11,13);
-    if(hr<h0 || hr>h1) continue;
-    const c=hourly.weather_code[k];
-    const rk=WMO_RANK[c] ?? 0;
-    if(rk>bestRank){ bestRank=rk; best=c; }
+    if(hr>=h0 && hr<=h1) out.push(hourly.weather_code[k]);
   }
-  return best;
+  return out;
+}
+
+// main = the average/dominant condition (mode, calmer one on ties);
+// extras = up to 2 distinct codes more notable than the main, most extreme first
+function partSummary(codes){
+  if(!codes.length) return null;
+  const freq={}; codes.forEach(c=>freq[c]=(freq[c]||0)+1);
+  let main=codes[0], bestF=-1;
+  Object.keys(freq).forEach(k=>{ const c=+k, f=freq[k];
+    if(f>bestF || (f===bestF && rank(c)<rank(main))){ bestF=f; main=c; }
+  });
+  const extras=[...new Set(codes)]
+    .filter(c=>rank(c)>rank(main))
+    .sort((a,b)=>rank(b)-rank(a))
+    .slice(0,2);
+  return { main, extras };
 }
 
 function renderDaily(d){
@@ -231,11 +246,15 @@ function renderDaily(d){
     const l=dd.temperature_2m_min[i], hh=dd.temperature_2m_max[i];
     const left=((l-lo)/span)*100, width=((hh-l)/span)*100;
     const parts = DAY_PARTS.map(([lbl,a,b])=>{
-      const raw = partCode(h,date,a,b);
-      const c = raw==null ? dd.weather_code[i] : raw;   // fall back to the daily code
-      const w = wmo(c, true);
+      const s = partSummary(sectionCodes(h,date,a,b)) || {main:dd.weather_code[i], extras:[]};
+      const wMain = wmo(s.main, true);
+      const extras = s.extras.map(c=>{
+        const wx=wmo(c,true);
+        return `<img class="dy-xic" src="${wxIcon(c)}" alt="${wx.label}" title="${wx.label}" width="16" height="16" loading="lazy" />`;
+      }).join('');
       return `<span class="dy-part">
-        <img class="dy-ic" src="${wxIcon(c)}" alt="${w.label}" title="${lbl}: ${w.label}" width="30" height="30" loading="lazy" />
+        <img class="dy-ic" src="${wxIcon(s.main)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="30" height="30" loading="lazy" />
+        <span class="dy-extra">${extras}</span>
         <span class="lbl">${lbl}</span></span>`;
     }).join('');
     const el=document.createElement('div'); el.className='dy';
