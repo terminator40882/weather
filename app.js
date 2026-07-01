@@ -197,22 +197,55 @@ function isDaytime(d, iso){
   const hr=new Date(iso).getHours(); return hr>=7 && hr<20;
 }
 
+// rough "how notable is this weather" ranking, to pick a representative code per
+// part of day from the hourly series (higher wins).
+const WMO_RANK = {0:0,1:1,2:2,3:3,45:4,48:4,51:5,53:6,55:7,56:7,57:8,
+  61:6,63:8,65:10,66:8,67:10,71:6,73:8,75:10,77:6,
+  80:7,81:9,82:11,85:7,86:9,95:12,96:13,99:14};
+const DAY_PARTS = [['morgens',6,11],['mittags',12,17],['abends',18,23]];
+
+// most notable weather code within [h0,h1] of the given local date, or null
+function partCode(hourly, date, h0, h1){
+  if(!hourly || !hourly.time) return null;
+  let best=null, bestRank=-1;
+  for(let k=0;k<hourly.time.length;k++){
+    const t=hourly.time[k];
+    if(t.slice(0,10)!==date) continue;
+    const hr=+t.slice(11,13);
+    if(hr<h0 || hr>h1) continue;
+    const c=hourly.weather_code[k];
+    const rk=WMO_RANK[c] ?? 0;
+    if(rk>bestRank){ bestRank=rk; best=c; }
+  }
+  return best;
+}
+
 function renderDaily(d){
   const wrap=$('daily'); wrap.innerHTML='';
-  const dd=d.daily;
+  const dd=d.daily, h=d.hourly;
   const lo=Math.min(...dd.temperature_2m_min), hi=Math.max(...dd.temperature_2m_max);
   const span=Math.max(1,hi-lo);
   dd.time.forEach((t,i)=>{
-    const w=wmo(dd.weather_code[i], true);
+    const date=String(t).slice(0,10);
     const dname=i===0?'Heute':new Date(t).toLocaleDateString('de-DE',{weekday:'short'});
-    const l=dd.temperature_2m_min[i], h=dd.temperature_2m_max[i];
-    const left=((l-lo)/span)*100, width=((h-l)/span)*100;
+    const l=dd.temperature_2m_min[i], hh=dd.temperature_2m_max[i];
+    const left=((l-lo)/span)*100, width=((hh-l)/span)*100;
+    const parts = DAY_PARTS.map(([lbl,a,b])=>{
+      const raw = partCode(h,date,a,b);
+      const c = raw==null ? dd.weather_code[i] : raw;   // fall back to the daily code
+      const w = wmo(c, true);
+      return `<span class="dy-part">
+        <img class="dy-ic" src="${wxIcon(c)}" alt="${w.label}" title="${lbl}: ${w.label}" width="30" height="30" loading="lazy" />
+        <span class="lbl">${lbl}</span></span>`;
+    }).join('');
     const el=document.createElement('div'); el.className='dy';
-    el.innerHTML=`<span class="d">${dname}</span>
-      <img class="dy-ic" src="${wxIcon(dd.weather_code[i])}" alt="${w.label}" title="${w.label}" width="40" height="40" loading="lazy" />
-      <span class="range"><span class="lo">${r0(l)}°</span>
-        <span class="bar"><i style="left:${left}%;width:${Math.max(6,width)}%"></i></span>
-        <span class="hi">${r0(h)}°</span></span>`;
+    el.innerHTML=`<div class="dy-top">
+        <span class="d">${dname}</span>
+        <span class="range"><span class="lo">${r0(l)}°</span>
+          <span class="bar"><i style="left:${left}%;width:${Math.max(6,width)}%"></i></span>
+          <span class="hi">${r0(hh)}°</span></span>
+      </div>
+      <div class="dy-parts">${parts}</div>`;
     wrap.appendChild(el);
   });
 }

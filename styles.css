@@ -145,13 +145,21 @@ body{
 .daily{border-top:1px solid var(--line);padding-top:20px}
 .daily-list{display:flex;flex-direction:column}
 .dy{
-  display:grid;grid-template-columns:46px 40px 1fr 96px;
-  align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:8px;
+  padding:12px 0;border-bottom:1px solid var(--line);
 }
 .dy:last-child{border-bottom:0}
-.dy .d{font-size:.86rem;color:var(--mist-dim)}
-.dy .dy-ic{width:40px;height:40px;justify-self:center;display:block}
-.dy .range{display:flex;align-items:center;gap:8px;font-size:.86rem}
+.dy-top{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}
+.dy .d{font-size:.9rem;color:var(--mist)}
+.dy-parts{display:flex;gap:8px}
+.dy-part{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 4px;border-radius:10px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.045));
+}
+.dy-part .dy-ic{width:32px;height:32px;display:block}
+.dy-part .lbl{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mist-faint)}
+.dy .range{display:flex;align-items:center;gap:8px;font-size:.86rem;width:clamp(140px,46vw,220px)}
 .dy .lo{color:var(--mist-dim);width:30px;text-align:right;font-family:"Space Mono",monospace}
 .dy .hi{width:30px;font-family:"Space Mono",monospace}
 .dy .bar{position:relative;flex:1;height:4px;border-radius:2px;background:var(--line)}
