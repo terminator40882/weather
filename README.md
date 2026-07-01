@@ -17,9 +17,9 @@ severe-weather warnings.
     future. It opens on the current time and never auto-advances. Every frame
     is preloaded as its own layer (opacity-swapped), so scrubbing the timeline
     is instant with no re-fetching or stutter.
-  - **Satellite** — DWD / EUMETSAT Meteosat over Europe (DWD WMS), with a
-    button at the bottom of the page to expand it to fullscreen.
-  - Each map names its provider underneath.
+  - The map names its provider underneath.
+- **7-day icons:** [Meteocons](https://bas.dev/work/meteocons) by Bas Milius
+  (MIT), animated SVGs bundled in `vendor/icons/`, mapped from the WMO codes.
 - **Current conditions from two providers, side by side:** Open-Meteo (DWD
   ICON-D2 model) and the DWD station network via [Bright Sky](https://brightsky.dev),
   each clearly attributed.

@@ -54,7 +54,7 @@
     <div class="rain-axis"><span>jetzt</span><span>+1h</span><span>+2h</span></div>
   </section>
 
-  <section class="radar" aria-label="Wetterkarten">
+  <section class="radar" aria-label="Regenradar">
     <div class="map-card">
       <div class="panel-label">
         <span>Radar</span>
@@ -71,15 +71,6 @@
         <input id="radarSlider" class="radar-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Radar-Zeit wählen" />
       </div>
       <span id="radarCredit" class="map-credit">Niederschlagsradar — RainViewer</span>
-    </div>
-
-    <div class="map-card">
-      <div class="panel-label"><span>Satellit Europa</span></div>
-      <div id="satWrap" class="map-wrap">
-        <div id="mapSat" class="map"></div>
-        <button id="satClose" class="map-close" type="button" aria-label="Schließen" hidden>✕</button>
-      </div>
-      <span class="map-credit">Satellit Europa — DWD · EUMETSAT (Meteosat)</span>
     </div>
   </section>
 
@@ -121,10 +112,8 @@
     <button id="refresh" class="btn" type="button">Aktualisieren</button>
     <button id="fs" class="btn" type="button">Vollbild</button>
     <button id="compass" class="btn" type="button" hidden>Kompass</button>
-    <span class="credit">Daten: Open-Meteo (DWD ICON-D2) &amp; DWD-Messnetz via Bright Sky · Karten: RainViewer, DWD/EUMETSAT · Warnungen: DWD via Bright Sky</span>
+    <span class="credit">Daten: Open-Meteo (DWD ICON-D2) &amp; DWD-Messnetz via Bright Sky · Radar: RainViewer, DWD · Warnungen: DWD via Bright Sky</span>
   </footer>
-
-  <button id="satExpand" class="btn btn-wide" type="button">Satellitenbild vergrößern</button>
 </main>
 
 <div id="toast" class="toast" hidden></div>

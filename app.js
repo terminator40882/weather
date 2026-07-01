@@ -20,6 +20,19 @@ const WMO = {
 };
 const wmo = (c, day) => { const e = WMO[c] || ['—','·','·']; return { label:e[0], glyph: day ? e[1] : e[2] }; };
 
+/* WMO code -> Meteocons (bundled in vendor/icons); daytime variants for the 7-day view */
+const WMO_ICON = {
+  0:'clear-day', 1:'clear-day', 2:'partly-cloudy-day', 3:'overcast-day',
+  45:'fog-day', 48:'fog-day',
+  51:'drizzle', 53:'drizzle', 55:'drizzle', 56:'sleet', 57:'sleet',
+  61:'rain', 63:'rain', 65:'rain', 66:'sleet', 67:'sleet',
+  71:'snow', 73:'snow', 75:'snow', 77:'snow',
+  80:'partly-cloudy-day-rain', 81:'rain', 82:'rain',
+  85:'partly-cloudy-day-snow', 86:'snow',
+  95:'thunderstorms', 96:'thunderstorms-rain', 99:'thunderstorms-rain'
+};
+const wxIcon = c => `vendor/icons/${WMO_ICON[c] || 'overcast-day'}.svg`;
+
 /* ---------- dynamic sky palettes ---------- */
 function skyFor(code, isDay){
   if(!isDay) return ['#0c1322','#141f33','#22324a','rgba(150,170,210,.10)'];
@@ -187,7 +200,7 @@ function renderDaily(d){
     const left=((l-lo)/span)*100, width=((h-l)/span)*100;
     const el=document.createElement('div'); el.className='dy';
     el.innerHTML=`<span class="d">${dname}</span>
-      <span class="g">${w.glyph}</span>
+      <img class="dy-ic" src="${wxIcon(dd.weather_code[i])}" alt="${w.label}" title="${w.label}" width="40" height="40" loading="lazy" />
       <span class="range"><span class="lo">${r0(l)}°</span>
         <span class="bar"><i style="left:${left}%;width:${Math.max(6,width)}%"></i></span>
         <span class="hi">${r0(h)}°</span></span>`;
@@ -276,7 +289,7 @@ const RV_API = 'https://api.rainviewer.com/public/weather-maps.json';
 const DWD_WMS = 'https://maps.dwd.de/geoserver/dwd/wms';
 // RainViewer radar tiles top out at a low zoom; keep the view zoomed out so the
 // "Zoom level not supported" placeholder never appears, and cap the native zoom.
-const RADAR_ZOOM = 7, SAT_ZOOM = 5, RADAR_MAX_NATIVE = 8;
+const RADAR_ZOOM = 7, RADAR_MAX_NATIVE = 8;
 // DWD timeline: 5-min product; show recent past + ~90 min forecast, 15-min steps.
 const DWD_STEP = 15*60000, DWD_BACK = 90*60000, DWD_FWD = 90*60000;
 
@@ -286,7 +299,6 @@ let radarMap=null, radarDot=null, radarSized=false, radarSource='rv', radarShown
 // only toggles opacity, so no tile reloads / stutter while swiping the timeline.
 let rvFrames=[], rvLayers=[], rvNowIdx=0, rvKey='';
 let dwdFrames=[], dwdLayers=[], dwdNowIdx=0, dwdKey='';
-let satMap=null, satDot=null;
 
 function baseTiles(){
   return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -349,17 +361,6 @@ function initMaps(){
       buildDwdFrames(); buildDwdLayers();
       setRadarSource('rv');
       loadRvFrames();
-    }
-  }
-  if(!satMap){
-    satMap = plainMap('mapSat');
-    if(satMap){
-      baseTiles().addTo(satMap);
-      L.tileLayer.wms(DWD_WMS, {layers:'dwd:Satellite_meteosat_1km_euat_rgb_day_hrv_and_night_ir108_3h',
-        format:'image/png', transparent:true, version:'1.3.0', opacity:.85,
-        attribution:'DWD · EUMETSAT'}).addTo(satMap);
-      satMap.setView([FALLBACK.lat, FALLBACK.lon], SAT_ZOOM);
-      satDot = locDot().addTo(satMap);
     }
   }
 }
@@ -427,30 +428,14 @@ function updateMaps(loc){
   initMaps();
   const c=[loc.lat, loc.lon];
   if(radarMap){ radarDot.setLatLng(c); radarMap.setView(c, RADAR_ZOOM, {animate:false}); }
-  if(satMap){ satDot.setLatLng(c); satMap.setView(c, SAT_ZOOM, {animate:false}); }
   buildDwdFrames(); buildDwdLayers();
   if(radarSource==='rv') loadRvFrames(); else syncScrubber();
-  if(!radarSized){ radarSized=true; setTimeout(()=>{
-    [radarMap, satMap].forEach(m=>m && m.invalidateSize());
-  }, 200); }
+  if(!radarSized){ radarSized=true; setTimeout(()=>{ if(radarMap) radarMap.invalidateSize(); }, 200); }
 }
 
 $('srcRv').addEventListener('click', ()=>setRadarSource('rv'));
 $('srcDwd').addEventListener('click', ()=>setRadarSource('dwd'));
 $('radarSlider').addEventListener('input', e=>showFrame(+e.target.value));
-
-/* ---------- satellite expand / collapse ---------- */
-function setSatExpanded(on){
-  const wrap=$('satWrap'); if(!wrap) return;
-  wrap.classList.toggle('expanded', on);
-  document.body.classList.toggle('sat-open', on);
-  const close=$('satClose'); if(close) close.hidden = !on;
-  const btn=$('satExpand'); if(btn) btn.textContent = on ? 'Satellitenbild verkleinern' : 'Satellitenbild vergrößern';
-  setTimeout(()=>{ if(satMap){ satMap.invalidateSize(); if(CURRENT) satMap.setView([CURRENT.lat,CURRENT.lon], SAT_ZOOM, {animate:false}); } }, 60);
-}
-$('satExpand').addEventListener('click', ()=>setSatExpanded(!$('satWrap').classList.contains('expanded')));
-$('satClose').addEventListener('click', ()=>setSatExpanded(false));
-document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('satWrap').classList.contains('expanded')) setSatExpanded(false); });
 
 /* ---------- compass: align the wind arrow to the viewing direction ---------- */
 let lastWindDir=null, devHeading=null, headingOn=false;

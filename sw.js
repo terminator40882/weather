@@ -1,5 +1,8 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v6';
+const CACHE = 'himmel-v7';
+const WX_ICONS = ['clear-day','partly-cloudy-day','overcast-day','fog-day','drizzle',
+  'sleet','rain','snow','partly-cloudy-day-rain','partly-cloudy-day-snow',
+  'thunderstorms','thunderstorms-rain'].map(n => `./vendor/icons/${n}.svg`);
 const SHELL = [
   './',
   './index.html',
@@ -11,7 +14,8 @@ const SHELL = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  ...WX_ICONS
 ];
 
 self.addEventListener('install', e => {

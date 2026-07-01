@@ -145,12 +145,12 @@ body{
 .daily{border-top:1px solid var(--line);padding-top:20px}
 .daily-list{display:flex;flex-direction:column}
 .dy{
-  display:grid;grid-template-columns:46px 30px 1fr 96px;
-  align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);
+  display:grid;grid-template-columns:46px 40px 1fr 96px;
+  align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);
 }
 .dy:last-child{border-bottom:0}
 .dy .d{font-size:.86rem;color:var(--mist-dim)}
-.dy .g{font-size:1.2rem;text-align:center}
+.dy .dy-ic{width:40px;height:40px;justify-self:center;display:block}
 .dy .range{display:flex;align-items:center;gap:8px;font-size:.86rem}
 .dy .lo{color:var(--mist-dim);width:30px;text-align:right;font-family:"Space Mono",monospace}
 .dy .hi{width:30px;font-family:"Space Mono",monospace}
@@ -199,20 +199,6 @@ body{
 .map-credit{font-size:.66rem;color:var(--mist-faint);letter-spacing:.04em}
 .map-wrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
 
-/* satellite expand */
-.map-close{
-  position:absolute;top:10px;right:10px;z-index:1001;
-  width:34px;height:34px;display:grid;place-items:center;
-  font-size:1rem;color:var(--mist);background:rgba(12,19,34,.78);
-  border:1px solid var(--line);border-radius:999px;cursor:pointer;
-}
-.map-wrap.expanded{
-  position:fixed;inset:0;z-index:1000;border:0;border-radius:0;
-  width:100vw;height:100vh;height:100svh;
-}
-.map-wrap.expanded .map{height:100%!important}
-body.sat-open{overflow:hidden}
-.btn-wide{width:100%;justify-content:center;text-align:center;margin-top:4px}
 .map{height:clamp(220px,42vw,300px);width:100%;background:#0c1322}
 .leaflet-container{background:#0c1322;font-family:inherit}
 .radar-time{
