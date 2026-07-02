@@ -158,24 +158,22 @@ body{
 /* full-bleed: the 6h parts span the full viewport width, breaking out of the
    app's centered/padded column, so there's room for larger icons */
 .dy-parts{
-  display:flex;gap:8px;
+  display:flex;gap:4px;
   position:relative;left:50%;width:100vw;margin-left:-50vw;
   padding:0 var(--pad);box-sizing:border-box;
 }
 .dy-part{
-  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:10px 4px;border-radius:12px;border:1px solid var(--line);
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;border-radius:12px;border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.045));
   font:inherit;color:inherit;cursor:pointer;transition:background .15s,border-color .15s;
 }
 .dy-part:hover{background:rgba(255,255,255,.07)}
 .dy-part.active{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 16%,transparent)}
-.dy-part.active .lbl{color:var(--warm)}
 .dy-part .dy-ic{width:48px;height:48px;display:block}
 /* extremes row: reserved height so the main icons stay aligned across sections */
 .dy-extra{display:flex;gap:4px;align-items:center;justify-content:center;min-height:22px}
 .dy-extra .dy-xic{width:22px;height:22px;display:block;opacity:.95}
-.dy-part .lbl{font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mist-faint)}
 
 /* expanded hourly detail for a picked 6h part */
 .dy-detail{

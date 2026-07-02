@@ -40,7 +40,8 @@ const WMO_ICON = {
   // thunderstorms: dry vs with precipitation/hail
   95:'thunderstorms-day', 96:'thunderstorms-day-rain', 99:'thunderstorms-rain'
 };
-const wxIcon = c => `vendor/icons/${WMO_ICON[c] || 'overcast-day'}.svg`;
+const wxIconByName = icon => `vendor/icons/${icon || 'overcast-day'}.svg`;
+const wxIcon = c => wxIconByName(WMO_ICON[c]);
 
 /* ---------- dynamic sky palettes ---------- */
 function skyFor(code, isDay){
@@ -208,12 +209,6 @@ function isDaytime(d, iso){
   const hr=new Date(iso).getHours(); return hr>=7 && hr<20;
 }
 
-// rough "how notable is this weather" ranking, to pick a representative code per
-// part of day from the hourly series (higher wins).
-const WMO_RANK = {0:0,1:1,2:2,3:3,45:4,48:4,51:5,53:6,55:7,56:7,57:8,
-  61:6,63:8,65:10,66:8,67:10,71:6,73:8,75:10,77:6,
-  80:7,81:9,82:11,85:7,86:9,95:12,96:13,99:14};
-const rank = c => WMO_RANK[c] ?? 0;
 // four 6-hour parts of the day
 const DAY_PARTS = [['nachts',0,5],['morgens',6,11],['mittags',12,17],['abends',18,23]];
 
@@ -230,20 +225,26 @@ function sectionCodes(hourly, date, h0, h1){
   return out;
 }
 
-// main = the average/dominant condition (mode, calmer one on ties);
-// extras = up to 2 distinct codes more notable than the main, most extreme first
+// Group hourly codes within a window by which icon they render as (codes sharing
+// an icon count as one thing), tracking frequency + first-occurrence index.
+function groupByIcon(codes){
+  const groups = new Map(); // icon -> {icon, count, firstIdx, repCode}
+  codes.forEach((c, idx) => {
+    const icon = WMO_ICON[c] || 'overcast-day';
+    if(!groups.has(icon)) groups.set(icon, { icon, count:0, firstIdx:idx, repCode:c });
+    groups.get(icon).count++;
+  });
+  return [...groups.values()];
+}
+
+// main = most frequent icon group; extras = 2nd and 3rd most frequent (left, then
+// right); ties broken by whichever occurs earliest in the window. Every icon file
+// appears at most once per tile (main and extras are always distinct icon groups).
 function partSummary(codes){
   if(!codes.length) return null;
-  const freq={}; codes.forEach(c=>freq[c]=(freq[c]||0)+1);
-  let main=codes[0], bestF=-1;
-  Object.keys(freq).forEach(k=>{ const c=+k, f=freq[k];
-    if(f>bestF || (f===bestF && rank(c)<rank(main))){ bestF=f; main=c; }
-  });
-  const extras=[...new Set(codes)]
-    .filter(c=>rank(c)>rank(main))
-    .sort((a,b)=>rank(b)-rank(a))
-    .slice(0,2);
-  return { main, extras };
+  const groups = groupByIcon(codes)
+    .sort((a,b) => b.count - a.count || a.firstIdx - b.firstIdx);
+  return { main: groups[0], extras: groups.slice(1, 3) };
 }
 
 // minimalist 7-day min/max chart: one vertical line per day, scaled to the
@@ -282,16 +283,16 @@ function renderDaily(d){
     const l=dd.temperature_2m_min[i], hh=dd.temperature_2m_max[i];
     const left=((l-lo)/span)*100, width=((hh-l)/span)*100;
     const parts = DAY_PARTS.map(([lbl,a,b])=>{
-      const s = partSummary(sectionCodes(h,date,a,b)) || {main:dd.weather_code[i], extras:[]};
-      const wMain = wmo(s.main, true);
-      const extras = s.extras.map(c=>{
-        const wx=wmo(c,true);
-        return `<img class="dy-xic" src="${wxIcon(c)}" alt="${wx.label}" title="${wx.label}" width="22" height="22" loading="lazy" />`;
+      const s = partSummary(sectionCodes(h,date,a,b))
+        || { main: { icon: WMO_ICON[dd.weather_code[i]] || 'overcast-day', repCode: dd.weather_code[i] }, extras: [] };
+      const wMain = wmo(s.main.repCode, true);
+      const extras = s.extras.map(g=>{
+        const wx=wmo(g.repCode,true);
+        return `<img class="dy-xic" src="${wxIconByName(g.icon)}" alt="${wx.label}" title="${wx.label}" width="22" height="22" loading="lazy" />`;
       }).join('');
-      return `<button class="dy-part" type="button" data-date="${date}" data-h0="${a}" data-h1="${b}" data-lbl="${lbl}">
-        <img class="dy-ic" src="${wxIcon(s.main)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="48" height="48" loading="lazy" />
-        <span class="dy-extra">${extras}</span>
-        <span class="lbl">${lbl}</span></button>`;
+      return `<button class="dy-part" type="button" data-date="${date}" data-h0="${a}" data-h1="${b}" data-lbl="${lbl}" aria-label="${lbl}: ${wMain.label}">
+        <img class="dy-ic" src="${wxIconByName(s.main.icon)}" alt="${wMain.label}" title="${lbl}: ${wMain.label}" width="48" height="48" loading="lazy" />
+        <span class="dy-extra">${extras}</span></button>`;
     }).join('');
     const el=document.createElement('div'); el.className='dy';
     el.innerHTML=`<div class="dy-top">
