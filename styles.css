@@ -286,7 +286,11 @@ body{
 .temps{border-top:1px solid var(--line);padding-top:20px}
 .temp-chart{display:flex;justify-content:space-between;gap:2px;padding:20px 2px}
 .tmp-day{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
-.tmp-scale{position:relative;width:3px;height:88px}
+/* .tmp-scale reserves fixed space at top/bottom for the number labels, so a day
+   whose max/min sits at the very top/bottom of the week's range never runs its
+   label into the weekday row below (or the panel label above) */
+.tmp-scale{position:relative;width:3px;height:128px}
+.tmp-track{position:absolute;top:20px;bottom:20px;left:0;width:3px}
 .tmp-line{
   position:absolute;left:50%;width:3px;border-radius:999px;
   transform:translateX(-50%);

@@ -275,9 +275,11 @@ function renderTempChart(d){
     const top=((hi-h)/span)*100, height=Math.max(4,((h-l)/span)*100);
     const el=document.createElement('div'); el.className='tmp-day';
     el.innerHTML=`<div class="tmp-scale">
-        <span class="tmp-hi" style="top:${top}%">${r0(h)}°</span>
-        <div class="tmp-line" style="top:${top}%;height:${height}%"></div>
-        <span class="tmp-lo" style="top:${top+height}%">${r0(l)}°</span>
+        <div class="tmp-track">
+          <span class="tmp-hi" style="top:${top}%">${r0(h)}°</span>
+          <div class="tmp-line" style="top:${top}%;height:${height}%"></div>
+          <span class="tmp-lo" style="top:${top+height}%">${r0(l)}°</span>
+        </div>
       </div>
       <span class="tmp-d">${dname}</span>`;
     wrap.appendChild(el);
