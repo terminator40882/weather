@@ -95,9 +95,9 @@ async function fetchWeather(lat, lon){
   const u = new URL('https://api.open-meteo.com/v1/forecast');
   u.search = new URLSearchParams({
     latitude:lat, longitude:lon, timezone:'auto', forecast_days:7,
-    current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    current:'temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
     minutely_15:'precipitation',
-    hourly:'temperature_2m,precipitation_probability,weather_code,dew_point_2m',
+    hourly:'temperature_2m,precipitation_probability,weather_code',
     daily:'weather_code,temperature_2m_max,temperature_2m_min'
   }).toString();
   const r = await fetch(u); if(!r.ok) throw new Error('Open-Meteo '+r.status);
@@ -128,17 +128,11 @@ function renderCurrent(d){
   $('condition').textContent = w.label;
   $('feels').textContent = 'gefühlt '+r0(c.apparent_temperature)+'°';
   applySky(c.weather_code, day);
-
-  // dew point from hourly at the current hour (Open-Meteo has no dew point in `current`)
-  const idx = nearestHourIdx(d.hourly.time);
-  LAST_DEW_OM = idx>=0 ? d.hourly.dew_point_2m[idx] : null;
 }
 
-// Wind + Feuchte are shown from one of two independent providers, switchable
-// via #srcToggle. Open-Meteo's `current` block has no dew point, so that one
-// value is taken from the hourly series regardless of the active source... unless
-// DWD is active and provides its own station dew point.
-let dataSrc='om', LAST_OM=null, LAST_DWD=null, LAST_DEW_OM=null;
+// Wind/Böen shown from one of two independent providers, switchable via
+// #srcToggle, which just displays the currently active provider's name.
+let dataSrc='om', LAST_OM=null, LAST_DWD=null;
 
 function renderReadouts(){
   const om=LAST_OM, dwd=LAST_DWD;
@@ -146,22 +140,13 @@ function renderReadouts(){
   const wind = useDwd ? dwd.wind_speed_10 : om && om.wind_speed_10m;
   const gust = useDwd ? dwd.wind_gust_speed_10 : om && om.wind_gusts_10m;
   const dir  = useDwd ? dwd.wind_direction_10 : om && om.wind_direction_10m;
-  const hum  = useDwd ? dwd.relative_humidity : om && om.relative_humidity_2m;
-  const dew  = useDwd ? dwd.dew_point : LAST_DEW_OM;
 
   $('wind').textContent = r0(wind);
-  $('gust').textContent = r0(gust)+' km/h';
-  $('windDir').textContent = dir==null ? '—' : compass(dir);
+  $('gust').textContent = r0(gust);
   lastWindDir = dir; applyWindRotation();
-  $('humidity').textContent = r0(hum);
-  $('dew').textContent = (dew==null ? '--' : r0(dew))+'°';
 
-  const cap=$('srcCaption');
-  if(cap) cap.textContent = useDwd
-    ? 'Wind & Feuchte: DWD Messnetz (via Bright Sky)'
-    : 'Wind & Feuchte: Open-Meteo (Modell DWD ICON-D2)';
   const btn=$('srcToggle');
-  if(btn) btn.textContent = useDwd ? 'Zu Open-Meteo wechseln' : 'Zu DWD wechseln';
+  if(btn) btn.textContent = useDwd ? 'DWD' : 'Open-Meteo';
 }
 
 $('srcToggle').addEventListener('click', ()=>{
@@ -401,12 +386,30 @@ async function load(){
 
 /* ---------- controls ---------- */
 $('refresh').addEventListener('click', load);
-$('fs').addEventListener('click', async ()=>{
-  try{
-    if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
-    else await document.exitFullscreen();
-  }catch{ toast('Vollbild wird hier nicht unterstützt.'); }
-});
+
+/* ---------- PWA install ---------- */
+// true once launched from the home screen / installed shell, in any of the
+// display modes our manifest declares — the install button never makes sense there.
+function isStandaloneDisplay(){
+  return ['standalone','fullscreen','minimal-ui'].some(m=>matchMedia(`(display-mode: ${m})`).matches)
+    || window.navigator.standalone === true; // iOS Safari's legacy flag
+}
+let deferredInstallPrompt=null;
+if(!isStandaloneDisplay()){
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    $('installBtn').hidden = false;
+  });
+  $('installBtn').addEventListener('click', async ()=>{
+    if(!deferredInstallPrompt) return;
+    $('installBtn').hidden = true;
+    deferredInstallPrompt.prompt();
+    try{ await deferredInstallPrompt.userChoice; }catch{}
+    deferredInstallPrompt = null;
+  });
+  window.addEventListener('appinstalled', ()=>{ $('installBtn').hidden = true; deferredInstallPrompt = null; });
+}
 
 /* ---------- weather maps (switchable RainViewer / DWD radar + satellite) ---------- */
 const RV_API = 'https://api.rainviewer.com/public/weather-maps.json';
@@ -452,6 +455,23 @@ function buildDwdFrames(){
 function addLayers(arr){ if(radarMap) arr.forEach(l=>l.addTo(radarMap)); }
 function removeLayers(arr){ if(radarMap) arr.forEach(l=>radarMap.removeLayer(l)); }
 
+/* ---------- radar loading indicator ---------- */
+// Track each tile layer's own load state (Leaflet fires 'load' once all its
+// tiles have settled). The overlay shows/hides based on whichever layer is
+// the one currently meant to be on screen, not the whole preloaded pool.
+function attachLoadTracking(layer){
+  layer._himmelLoaded = false;
+  const done = () => { layer._himmelLoaded = true; onLayerLoaded(layer); };
+  layer.once('load', done);
+  layer.once('tileerror', done); // a failed tile shouldn't hang the spinner forever
+}
+function onLayerLoaded(layer){
+  const layers = activeLayers();
+  if(layers[radarShownIdx] === layer) hideRadarLoading();
+}
+function showRadarLoading(){ const el=$('radarLoading'); if(el) el.classList.remove('hide'); }
+function hideRadarLoading(){ const el=$('radarLoading'); if(el) el.classList.add('hide'); }
+
 // (Re)build the preloaded layer pool for a source. Adding every frame layer to
 // the map (at opacity 0) makes the browser fetch all tiles up front.
 function buildRvLayers(){
@@ -459,8 +479,10 @@ function buildRvLayers(){
   if(key===rvKey && rvLayers.length) return;
   rvKey = key;
   removeLayers(rvLayers);
-  rvLayers = rvFrames.map(f => L.tileLayer(f.url,
-    {opacity:0, maxNativeZoom:RADAR_MAX_NATIVE, maxZoom:19, zIndex:300}));
+  rvLayers = rvFrames.map(f => {
+    const l = L.tileLayer(f.url, {opacity:0, maxNativeZoom:RADAR_MAX_NATIVE, maxZoom:19, zIndex:300});
+    attachLoadTracking(l); return l;
+  });
   if(radarSource==='rv') addLayers(rvLayers);
 }
 function buildDwdLayers(){
@@ -468,9 +490,11 @@ function buildDwdLayers(){
   if(key===dwdKey && dwdLayers.length) return;
   dwdKey = key;
   removeLayers(dwdLayers);
-  dwdLayers = dwdFrames.map(f => L.tileLayer.wms(DWD_WMS,
-    {layers:'dwd:Niederschlagsradar', format:'image/png', transparent:true,
-     version:'1.3.0', time:f.iso, opacity:0, zIndex:300, attribution:'DWD'}));
+  dwdLayers = dwdFrames.map(f => {
+    const l = L.tileLayer.wms(DWD_WMS, {layers:'dwd:Niederschlagsradar', format:'image/png',
+      transparent:true, version:'1.3.0', time:f.iso, opacity:0, zIndex:300, attribution:'DWD'});
+    attachLoadTracking(l); return l;
+  });
   if(radarSource==='dwd') addLayers(dwdLayers);
 }
 
@@ -517,6 +541,7 @@ function showFrame(i){
   const op = radarSource==='rv' ? RV_OPACITY : DWD_OPACITY;
   layers.forEach((l,k)=>l.setOpacity(k===i ? op : 0)); // preloaded → instant swap
   radarShownIdx = i;
+  (layers[i]._himmelLoaded ? hideRadarLoading : showRadarLoading)();
   const lbl=$('radarTime');
   if(lbl){
     const hhmm = new Date(f.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
@@ -537,6 +562,9 @@ function syncScrubber(){
 
 function setRadarSource(src){
   radarSource = src;
+  // default to "loading" the instant we switch; syncScrubber()->showFrame()
+  // below will immediately hide it again if the target frame is already loaded
+  showRadarLoading();
   $('srcRv').classList.toggle('on', src==='rv');
   $('srcDwd').classList.toggle('on', src==='dwd');
   removeLayers(src==='rv' ? dwdLayers : rvLayers);

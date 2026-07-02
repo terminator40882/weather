@@ -46,22 +46,13 @@
           <span id="feels" class="readout">gefühlt --°</span>
         </div>
       </div>
-      <div class="hero-cells">
-        <div class="cell">
-          <span class="cell-label">Wind</span>
-          <span class="cell-val"><span id="wind" class="readout">--</span> <span class="unit">km/h</span></span>
-          <span class="cell-sub"><span id="windArrow" class="arrow" aria-hidden="true">↑</span> <span id="windDir" class="readout">—</span> · Böen <span id="gust" class="readout">--</span></span>
-        </div>
-        <div class="cell">
-          <span class="cell-label">Feuchte</span>
-          <span class="cell-val"><span id="humidity" class="readout">--</span> <span class="unit">%</span></span>
-          <span class="cell-sub">Taupunkt <span id="dew" class="readout">--°</span></span>
-        </div>
+      <div class="hero-wind">
+        <div class="hw-line"><span id="windArrow" class="arrow" aria-hidden="true">↑</span> <span id="wind" class="readout">--</span> km/h</div>
+        <div class="hw-sub">Böen <span id="gust" class="readout">--</span> km/h</div>
       </div>
     </div>
     <div class="src-toggle">
-      <button id="srcToggle" class="rbtn" type="button">Zu DWD wechseln</button>
-      <span id="srcCaption" class="src-caption">Wind &amp; Feuchte: Open-Meteo (Modell DWD ICON-D2)</span>
+      <button id="srcToggle" class="rbtn small" type="button">Open-Meteo</button>
     </div>
   </section>
 
@@ -91,6 +82,7 @@
       <div class="map-wrap">
         <div id="map" class="map"></div>
         <span id="radarTime" class="radar-time readout"></span>
+        <div id="radarLoading" class="radar-loading" aria-hidden="true"><span class="rl-ring"></span></div>
       </div>
       <div class="radar-scrub">
         <input id="radarSlider" class="radar-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Radar-Zeit wählen" />
@@ -111,7 +103,7 @@
 
   <footer class="foot">
     <button id="refresh" class="btn" type="button">Aktualisieren</button>
-    <button id="fs" class="btn" type="button">Vollbild</button>
+    <button id="installBtn" class="btn" type="button" hidden>App installieren</button>
     <button id="compass" class="btn" type="button" hidden>Kompass</button>
     <span class="credit">Daten: Open-Meteo (DWD ICON-D2) &amp; DWD-Messnetz via Bright Sky · Radar: RainViewer, DWD · Warnungen: DWD via Bright Sky</span>
   </footer>

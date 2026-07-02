@@ -18,6 +18,10 @@ severe-weather warnings.
     forecast/nowcast into the future. It opens on the current time and never
     auto-advances. Every frame is preloaded as its own layer (opacity-swapped),
     so scrubbing the timeline is instant with no re-fetching or stutter.
+  - A modern animated loading ring overlays the map whenever the frame that
+    should be visible hasn't finished loading its tiles yet (initial load,
+    switching source, or scrubbing to an uncached frame), so it's always
+    clear when what's on screen isn't current.
   - The map names its provider underneath.
 - **7-day min/max chart, right below the radar:** a minimalist glance-only
   chart — one vertical line per day from **Heute** onward, its length and
@@ -35,10 +39,13 @@ severe-weather warnings.
   part highlights it and expands an hourly temperature/condition breakdown
   for that window below the day; expanding another part collapses
   the previously open one (only one at a time, across all days).
-- **Wind & Feuchte, next to the temperature:** shown from Open-Meteo by
-  default, switchable with one button to the DWD station network via
-  [Bright Sky](https://brightsky.dev) — the caption underneath always names
-  the active provider.
+- **Compact hero:** the big current temperature and, smaller beneath it,
+  condition + feels-like — with wind speed and gusts as plain text (no card)
+  next to it. No humidity/dew point; that's intentionally out of scope for
+  the quick glance. A small pill button switches the wind reading between
+  Open-Meteo (default) and the DWD station network via
+  [Bright Sky](https://brightsky.dev) — the button itself always shows just
+  the currently active provider's name.
 - **Warnings:** DWD via Bright Sky — keyless, CORS-enabled.
 - **Location names:** BigDataCloud reverse geocoding (keyless).
 - **Compass-aligned wind:** when the device exposes an absolute orientation /
@@ -95,9 +102,14 @@ https://<your-username>.github.io/weather/
 
 ## Install as a fullscreen app
 
-Open the Pages URL on your phone → browser menu → **Add to Home Screen**.
-Launched from the home screen it runs fullscreen (no browser chrome).
-There's also a **Vollbild** button for in-browser fullscreen.
+On browsers that support it (Chrome/Edge/Android), an **App installieren**
+button appears at the bottom of the page once the browser signals the app is
+installable, using the standard `beforeinstallprompt` flow — no custom UI
+needed beyond the button itself. It never appears once the app is already
+running installed (detected via `display-mode`), and on browsers without that
+API (notably iOS Safari) it simply never shows — install manually there via
+the browser menu → **Add to Home Screen**. Launched from the home screen it
+runs fullscreen (no browser chrome).
 
 ## Notes
 
