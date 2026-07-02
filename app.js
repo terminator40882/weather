@@ -261,6 +261,29 @@ function partSummary(codes){
   return { main, extras };
 }
 
+// minimalist 7-day min/max chart: one vertical line per day, scaled to the
+// week's overall temperature span, with the max/min numbers right at its ends —
+// purely for a quick at-a-glance read, not the detailed forecast (see renderDaily).
+function renderTempChart(d){
+  const wrap=$('tempChart'); if(!wrap) return; wrap.innerHTML='';
+  const dd=d.daily;
+  const lo=Math.min(...dd.temperature_2m_min), hi=Math.max(...dd.temperature_2m_max);
+  const span=Math.max(1,hi-lo);
+  dd.time.forEach((t,i)=>{
+    const dname=i===0?'Heute':new Date(t).toLocaleDateString('de-DE',{weekday:'short'});
+    const l=dd.temperature_2m_min[i], h=dd.temperature_2m_max[i];
+    const top=((hi-h)/span)*100, height=Math.max(4,((h-l)/span)*100);
+    const el=document.createElement('div'); el.className='tmp-day';
+    el.innerHTML=`<div class="tmp-scale">
+        <span class="tmp-hi" style="top:${top}%">${r0(h)}°</span>
+        <div class="tmp-line" style="top:${top}%;height:${height}%"></div>
+        <span class="tmp-lo" style="top:${top+height}%">${r0(l)}°</span>
+      </div>
+      <span class="tmp-d">${dname}</span>`;
+    wrap.appendChild(el);
+  });
+}
+
 function renderDaily(d){
   const wrap=$('daily'); wrap.innerHTML='';
   const dd=d.daily, h=d.hourly;
@@ -363,7 +386,7 @@ async function load(){
     LAST_WX = wx; LAST_OM = wx.current; LAST_DWD = dwd;
     $('place').textContent = loc.name || await placeName(loc.lat, loc.lon);
     renderCurrent(wx); renderReadouts();
-    renderNowcast(wx); renderHourly(wx); renderDaily(wx);
+    renderNowcast(wx); renderHourly(wx); renderTempChart(wx); renderDaily(wx);
     renderAlerts(alerts);
     updateMaps(loc);
   }catch(e){

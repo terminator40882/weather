@@ -19,6 +19,11 @@ severe-weather warnings.
     auto-advances. Every frame is preloaded as its own layer (opacity-swapped),
     so scrubbing the timeline is instant with no re-fetching or stutter.
   - The map names its provider underneath.
+- **7-day min/max chart, right below the radar:** a minimalist glance-only
+  chart — one vertical line per day from **Heute** onward, its length and
+  position scaled to the week's overall temperature span, with the day's max
+  written right above the line and its min right below. No icons, no extra
+  detail; the full breakdown lives in the day-by-day list further down.
 - **7-day icons:** [Meteocons](https://bas.dev/work/meteocons) by Bas Milius
   (MIT), animated SVGs bundled in `vendor/icons/`, mapped from the WMO codes.
   Each day is split into **four 6-hour parts — nachts / morgens / mittags /

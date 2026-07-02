@@ -281,6 +281,25 @@ body{
 /* once aligned to the device heading, the arrow is no longer red */
 .compass-on .arrow{color:var(--warm)}
 
+/* minimalist 7-day min/max chart: one vertical range line per day, for a quick
+   glance only (the detailed forecast below has the real per-day breakdown) */
+.temps{border-top:1px solid var(--line);padding-top:20px}
+.temp-chart{display:flex;justify-content:space-between;gap:2px;padding:20px 2px}
+.tmp-day{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
+.tmp-scale{position:relative;width:3px;height:88px}
+.tmp-line{
+  position:absolute;left:50%;width:3px;border-radius:999px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg,var(--warm),var(--rain));
+}
+.tmp-hi,.tmp-lo{
+  position:absolute;left:50%;white-space:nowrap;
+  font-size:.72rem;font-family:"Space Mono",monospace;
+}
+.tmp-hi{color:var(--mist);transform:translate(-50%,calc(-100% - 4px))}
+.tmp-lo{color:var(--mist-dim);transform:translate(-50%,4px)}
+.tmp-d{font-size:.66rem;color:var(--mist-faint);letter-spacing:.05em;text-transform:uppercase}
+
 /* radar scrubber */
 .radar-scrub{display:flex;align-items:center;gap:10px;margin-top:10px}
 .radar-slider{
