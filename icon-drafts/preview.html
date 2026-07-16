@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Himmel — Icon-Entwürfe</title>
+<style>
+  :root{
+    --ink:#0f1722; --ink-2:#16202e; --mist:#eef2f7; --mist-dim:#9fb0c3;
+    --warm:#e8b27a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:48px 24px 80px; background:var(--ink); color:var(--mist);
+    font:16px/1.5 Inter,system-ui,sans-serif;
+  }
+  h1{font-weight:600; letter-spacing:.02em; margin:0 0 6px}
+  .sub{color:var(--mist-dim); margin:0 0 40px}
+  h2{font-size:15px; font-weight:600; text-transform:uppercase; letter-spacing:.14em;
+     color:var(--warm); margin:56px 0 6px}
+  .desc{color:var(--mist-dim); margin:0 0 20px; max-width:640px}
+  .row{display:flex; flex-wrap:wrap; gap:28px; align-items:flex-end}
+  figure{margin:0; text-align:center}
+  figcaption{font-size:12px; color:var(--mist-dim); margin-top:8px; font-family:"Space Mono",monospace}
+  img{display:block; image-rendering:auto}
+  .tile{background:var(--ink-2); border:1px solid #223045; border-radius:16px; padding:20px}
+  .circle img{border-radius:50%}
+  .ios img{border-radius:22.5%}
+  .homescreen{
+    display:inline-flex; gap:26px; padding:26px 30px;
+    background:linear-gradient(180deg,#1b2942,#243752 55%,#3d5774); border-radius:20px;
+  }
+  .homescreen figcaption{color:#dfe7f0}
+  .old{opacity:.9}
+  hr{border:0; border-top:1px solid #223045; margin:64px 0 0}
+</style>
+</head>
+<body>
+<h1>Himmel — App-Icon-Entwürfe</h1>
+<p class="sub">Drei Varianten in der Farbwelt der App. Nichts davon ist eingebunden — Auswahl offen.</p>
+
+<h2>A — Abenddämmerung</h2>
+<p class="desc">Der dynamische Abendhimmel der App als Icon: tiefstehende Sonne über dem Horizont, Sterne, Spiegelung im Wasser.</p>
+<div class="row">
+  <figure class="tile"><img src="a-abenddaemmerung/icon-512.png" width="256" height="256"><figcaption>icon-512</figcaption></figure>
+  <figure class="tile"><img src="a-abenddaemmerung/icon-192.png" width="96" height="96"><figcaption>192 → 96px</figcaption></figure>
+  <figure class="tile"><img src="a-abenddaemmerung/icon-192.png" width="48" height="48"><figcaption>48px</figcaption></figure>
+  <figure class="tile"><img src="a-abenddaemmerung/favicon.svg" width="32" height="32"><figcaption>favicon 32</figcaption></figure>
+  <figure class="tile circle"><img src="a-abenddaemmerung/icon-maskable-512.png" width="128" height="128"><figcaption>maskable ◯</figcaption></figure>
+  <figure class="tile ios"><img src="a-abenddaemmerung/apple-touch-icon.png" width="120" height="120"><figcaption>apple-touch</figcaption></figure>
+</div>
+
+<h2>B — Sonne &amp; Regen</h2>
+<p class="desc">Geometrisch-flach: Amber-Sonne mit Strahlen, darunter Regen in den Blau-Tönen der App. Am klarsten lesbar in kleinen Größen.</p>
+<div class="row">
+  <figure class="tile"><img src="b-sonne-regen/icon-512.png" width="256" height="256"><figcaption>icon-512</figcaption></figure>
+  <figure class="tile"><img src="b-sonne-regen/icon-192.png" width="96" height="96"><figcaption>192 → 96px</figcaption></figure>
+  <figure class="tile"><img src="b-sonne-regen/icon-192.png" width="48" height="48"><figcaption>48px</figcaption></figure>
+  <figure class="tile"><img src="b-sonne-regen/favicon.svg" width="32" height="32"><figcaption>favicon 32</figcaption></figure>
+  <figure class="tile circle"><img src="b-sonne-regen/icon-maskable-512.png" width="128" height="128"><figcaption>maskable ◯</figcaption></figure>
+  <figure class="tile ios"><img src="b-sonne-regen/apple-touch-icon.png" width="120" height="120"><figcaption>apple-touch</figcaption></figure>
+</div>
+
+<h2>C — Temperaturkurve</h2>
+<p class="desc">Anspielung auf den 7-Tage-Temperaturverlauf: eine Kurve von Regenblau nach Amber, die in der Sonne endet. Am eigenständigsten.</p>
+<div class="row">
+  <figure class="tile"><img src="c-kurve/icon-512.png" width="256" height="256"><figcaption>icon-512</figcaption></figure>
+  <figure class="tile"><img src="c-kurve/icon-192.png" width="96" height="96"><figcaption>192 → 96px</figcaption></figure>
+  <figure class="tile"><img src="c-kurve/icon-192.png" width="48" height="48"><figcaption>48px</figcaption></figure>
+  <figure class="tile"><img src="c-kurve/favicon.svg" width="32" height="32"><figcaption>favicon 32</figcaption></figure>
+  <figure class="tile circle"><img src="c-kurve/icon-maskable-512.png" width="128" height="128"><figcaption>maskable ◯</figcaption></figure>
+  <figure class="tile ios"><img src="c-kurve/apple-touch-icon.png" width="120" height="120"><figcaption>apple-touch</figcaption></figure>
+</div>
+
+<hr>
+<h2>Vergleich auf dem Homescreen</h2>
+<p class="desc">Aktuelles Icon neben den drei Entwürfen.</p>
+<div class="homescreen">
+  <figure class="old ios"><img src="../icon-512.png" width="96" height="96"><figcaption>aktuell</figcaption></figure>
+  <figure class="ios"><img src="a-abenddaemmerung/icon-maskable-512.png" width="96" height="96"><figcaption>A</figcaption></figure>
+  <figure class="ios"><img src="b-sonne-regen/icon-maskable-512.png" width="96" height="96"><figcaption>B</figcaption></figure>
+  <figure class="ios"><img src="c-kurve/icon-maskable-512.png" width="96" height="96"><figcaption>C</figcaption></figure>
+</div>
+</body>
+</html>
