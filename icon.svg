@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Himmel Wetter-App</title>
+  <desc id="desc">Eine goldene Sonne hinter einer hellen Wolke mit drei blauen Regenstrichen.</desc>
+  <defs>
+    <linearGradient id="sky" x1="256" y1="0" x2="256" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17263d"/>
+      <stop offset="0.48" stop-color="#354b67"/>
+      <stop offset="1" stop-color="#637f9e"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientTransform="translate(205 166) rotate(55) scale(142)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffd879"/>
+      <stop offset="1" stop-color="#ffc356"/>
+    </radialGradient>
+    <linearGradient id="cloud" x1="219" y1="235" x2="367" y2="396" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8f9fb"/>
+      <stop offset="1" stop-color="#e8edf4"/>
+    </linearGradient>
+    <linearGradient id="rain" x1="215" y1="393" x2="344" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#68bcf3"/>
+      <stop offset="1" stop-color="#4ba6e7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#sky)"/>
+
+  <!-- Sun and rays -->
+  <g fill="none" stroke="#ffca64" stroke-width="11" stroke-linecap="round">
+    <path d="M227 125V96"/>
+    <path d="M160 151L140 131"/>
+    <path d="M134 216H105"/>
+    <path d="M160 282L140 302"/>
+    <path d="M294 151L314 131"/>
+    <path d="M320 216H349"/>
+  </g>
+  <circle cx="227" cy="216" r="72" fill="url(#sun)"/>
+
+  <!-- Cloud: one continuous silhouette for crisp scaling -->
+  <path fill="url(#cloud)" d="M226 377c-28 0-50-22-50-50 0-25 18-46 42-50 6-30 33-53 65-53 24 0 45 12 57 30 6-3 13-4 20-4 27 0 50 19 55 45 13 8 21 23 21 39 0 24-19 43-43 43H226Z"/>
+
+  <!-- Rain -->
+  <g fill="none" stroke="url(#rain)" stroke-width="12" stroke-linecap="round">
+    <path d="M249 394L235 424"/>
+    <path d="M300 394L286 424"/>
+    <path d="M351 394L337 424"/>
+  </g>
+</svg>
