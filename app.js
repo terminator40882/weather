@@ -344,6 +344,32 @@ $('daily').addEventListener('click', e=>{
   detail.hidden=false;
 });
 
+// Warntexte (v. a. See-/Küstenwarnungen) nennen teils nautische/imperiale
+// Einheiten. Hier auf metrisch normalisieren, damit die Meldungen oben nur
+// km/h und km zeigen — keine Knoten, mph oder Meilen.
+function toMetric(text){
+  if(!text) return text;
+  const num = s => parseFloat(String(s).replace(',', '.'));
+  // Knoten → km/h (1 kn = 1,852 km/h), inkl. Bereichen ("20 bis 34 kn")
+  text = text.replace(
+    /(\d+(?:[.,]\d+)?)(\s*(?:bis|–|—|-)\s*(\d+(?:[.,]\d+)?))?\s*(?:kn|kt|kts|Knoten|knots)\b/gi,
+    (_m, a, _r, b) => {
+      const c = n => Math.round(num(n) * 1.852);
+      return b ? `${c(a)} bis ${c(b)} km/h` : `${c(a)} km/h`;
+    }
+  );
+  // mph → km/h
+  text = text.replace(/(\d+(?:[.,]\d+)?)\s*mph\b/gi,
+    (_m, a) => `${Math.round(num(a) * 1.609)} km/h`);
+  // Seemeilen → km (1 sm = 1,852 km) — vor den Landmeilen prüfen
+  text = text.replace(/(\d+(?:[.,]\d+)?)\s*(?:Seemeilen|Seemeile|nmi)\b/gi,
+    (_m, a) => `${Math.round(num(a) * 1.852)} km`);
+  // Landmeilen → km (1 mi = 1,609 km)
+  text = text.replace(/(\d+(?:[.,]\d+)?)\s*(?:miles|mile|Meilen)\b/gi,
+    (_m, a) => `${Math.round(num(a) * 1.609)} km`);
+  return text;
+}
+
 function renderAlerts(alerts){
   const box=$('alerts');
   if(!alerts.length){ box.hidden=true; box.innerHTML=''; return; }
@@ -353,8 +379,8 @@ function renderAlerts(alerts){
     const sev=sevMap[a.severity]||1;
     const el=document.createElement('div');
     el.className='alert-item sev-'+sev;
-    const head=a.event_de||a.event_en||a.headline_de||'Wetterwarnung';
-    const body=a.description_de||a.headline_de||'';
+    const head=toMetric(a.event_de||a.event_en||a.headline_de||'Wetterwarnung');
+    const body=toMetric(a.description_de||a.headline_de||'');
     el.innerHTML=`<div class="a-head">⚠ ${head}</div>${body?`<div class="a-body">${body}</div>`:''}`;
     box.appendChild(el);
   });
