@@ -96,7 +96,7 @@ async function fetchWeather(lat, lon){
   const u = new URL('https://api.open-meteo.com/v1/forecast');
   u.search = new URLSearchParams({
     latitude:lat, longitude:lon, timezone:'auto', forecast_days:7,
-    current:'temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    current:'temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
     minutely_15:'precipitation',
     hourly:'temperature_2m,precipitation_probability,weather_code',
     daily:'weather_code,temperature_2m_max,temperature_2m_min'
@@ -141,9 +141,11 @@ function renderReadouts(){
   const wind = useDwd ? dwd.wind_speed_10 : om && om.wind_speed_10m;
   const gust = useDwd ? dwd.wind_gust_speed_10 : om && om.wind_gusts_10m;
   const dir  = useDwd ? dwd.wind_direction_10 : om && om.wind_direction_10m;
+  const humidity = useDwd ? dwd.relative_humidity : om && om.relative_humidity_2m;
 
   $('wind').textContent = r0(wind);
   $('gust').textContent = r0(gust);
+  $('humidity').textContent = r0(humidity);
   lastWindDir = dir; applyWindRotation();
 
   const btn=$('srcToggle');

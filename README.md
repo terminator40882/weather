@@ -40,9 +40,9 @@ severe-weather warnings.
   for that window below the day; expanding another part collapses
   the previously open one (only one at a time, across all days).
 - **Compact hero:** the big current temperature and, smaller beneath it,
-  condition + feels-like — with wind speed and gusts as plain text (no card)
-  next to it. No humidity/dew point; that's intentionally out of scope for
-  the quick glance. A small pill button switches the wind reading between
+  condition + feels-like — with wind speed, gusts, and relative humidity
+  as plain text (no card) next to it. A small pill button switches the
+  wind and humidity readings between
   Open-Meteo (default) and the DWD station network via
   [Bright Sky](https://brightsky.dev) — the button itself always shows just
   the currently active provider's name.
