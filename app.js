@@ -387,6 +387,28 @@ function renderAlerts(alerts){
   box.hidden=false;
 }
 
+/* ---------- data freshness / staleness veils ---------- */
+// Two independent clocks — one for the radar, one for everything else. Once a
+// clock passes 10 min the matching frosted-glass veil fades in, so cached or
+// stale values on screen are never mistaken for live ones.
+const STALE_MS = 10*60000;
+let dataFetchedAt = 0, radarFetchedAt = 0;
+function markDataFresh(){ dataFetchedAt = Date.now(); refreshStale(); }
+function markRadarFresh(){ radarFetchedAt = Date.now(); refreshStale(); }
+function ageText(ts){
+  const m = Math.floor((Date.now()-ts)/60000);
+  return m < 60 ? `vor ${m} Min` : `vor ${Math.floor(m/60)} Std`;
+}
+function refreshStale(){
+  const now = Date.now();
+  const dataStale  = dataFetchedAt  && now-dataFetchedAt  > STALE_MS;
+  const radarStale = radarFetchedAt && now-radarFetchedAt > STALE_MS;
+  document.body.classList.toggle('is-stale-data',  !!dataStale);
+  document.body.classList.toggle('is-stale-radar', !!radarStale);
+  if(dataStale){ const t=$('staleTag'); if(t) t.textContent = 'Daten veraltet · '+ageText(dataFetchedAt); }
+  if(radarStale){ const t=$('radarStaleTag'); if(t) t.textContent = 'Radar veraltet · '+ageText(radarFetchedAt); }
+}
+
 /* ---------- orchestration ---------- */
 let CURRENT=null, LAST_WX=null;
 async function load(){
@@ -405,6 +427,7 @@ async function load(){
     renderNowcast(wx); renderHourly(wx); renderTempChart(wx); renderDaily(wx);
     renderAlerts(alerts);
     updateMaps(loc);
+    markDataFresh();
   }catch(e){
     console.error(e);
     toast('Wetterdaten konnten nicht geladen werden. Tippe auf Aktualisieren.');
@@ -557,6 +580,7 @@ async function loadRvFrames(){
     rvNowIdx = Math.max(0, past.length-1); // last observation ≈ now
     buildRvLayers();
     if(radarSource==='rv') syncScrubber();
+    markRadarFresh();
   }catch{ /* base map stays without overlay */ }
 }
 
@@ -612,6 +636,7 @@ function updateMaps(loc){
   buildDwdFrames(); buildDwdLayers();
   if(radarSource==='rv') loadRvFrames(); else syncScrubber();
   if(!radarSized){ radarSized=true; setTimeout(()=>{ if(radarMap) radarMap.invalidateSize(); }, 200); }
+  markRadarFresh();
 }
 
 $('srcRv').addEventListener('click', ()=>setRadarSource('rv'));
@@ -658,6 +683,14 @@ function initCompass(){
 
 /* ---------- init ---------- */
 tick(); setInterval(tick, 15000);
+setInterval(refreshStale, 30000); // let the veils appear once data crosses 10 min
+// Coming back to the app (phone unlock / tab switch) is the classic "looks
+// fresh but isn't" moment — re-check age and pull new data so the veil clears.
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) return;
+  refreshStale();
+  if(!dataFetchedAt || Date.now()-dataFetchedAt > 2*60000) load();
+});
 initCompass();
 initMaps();   // bring up the maps independently of the weather fetch
 load();

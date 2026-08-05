@@ -24,6 +24,10 @@
 
 <main id="app" class="app" aria-live="polite">
 
+  <div id="staleVeil" class="stale-veil" aria-hidden="true">
+    <span id="staleTag" class="stale-tag">Daten nicht aktuell</span>
+  </div>
+
   <div id="alerts" class="alerts" hidden></div>
 
   <header class="head">
@@ -85,6 +89,7 @@
         <div id="map" class="map"></div>
         <span id="radarTime" class="radar-time readout"></span>
         <div id="radarLoading" class="radar-loading" aria-hidden="true"><span class="rl-ring"></span></div>
+        <div id="radarStale" class="radar-stale" aria-hidden="true"><span id="radarStaleTag" class="stale-tag">Radar nicht aktuell</span></div>
       </div>
       <div class="radar-scrub">
         <input id="radarSlider" class="radar-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Radar-Zeit wählen" />
