@@ -212,7 +212,7 @@ function isDaytime(d, iso){
 }
 
 // four 6-hour parts of the day
-const DAY_PARTS = [['nachts',0,5],['morgens',6,11],['mittags',12,17],['abends',18,23]];
+const DAY_PARTS = [['morgens',6,11],['mittags',12,17],['abends',18,23],['nachts',0,5]];
 
 // weather codes within [h0,h1] of the given local date
 function sectionCodes(hourly, date, h0, h1){
