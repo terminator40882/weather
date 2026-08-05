@@ -705,18 +705,42 @@ if('serviceWorker' in navigator){
   // page was ALREADY controlled by a previous SW, i.e. a real version swap;
   // otherwise a fresh visit would reload itself for no reason.
   const hadController = !!navigator.serviceWorker.controller;
-  let swReloaded=false;
+  let reloading=false;
+  const reloadOnce=()=>{ if(reloading) return; reloading=true; location.reload(); };
+
   navigator.serviceWorker.addEventListener('controllerchange', ()=>{
-    if(!hadController || swReloaded) return;
-    swReloaded=true; location.reload();
+    if(hadController) reloadOnce(); // real sw.js version swap took over
   });
+
+  // Content-based update check: ask the active SW to compare the live shell on
+  // main against its cache. If app.js/index.html/styles.css changed, it refreshes
+  // the cache and posts back 'himmel-updated' → we reload into the new version.
+  // This rolls out plain content deploys without a manual CACHE bump.
+  let lastUpdateCheck=0;
+  function checkForUpdate(force){
+    const ctrl = navigator.serviceWorker.controller;
+    if(!ctrl) return;
+    const now=Date.now();
+    if(!force && now-lastUpdateCheck < 5*60000) return; // throttle to once / 5 min
+    lastUpdateCheck=now;
+    ctrl.postMessage({type:'himmel-check-update'});
+  }
+  navigator.serviceWorker.addEventListener('message', e=>{
+    if(e.data && e.data.type==='himmel-updated') reloadOnce();
+  });
+
   // updateViaCache:'none' stops the browser's own HTTP cache from serving a
   // stale sw.js for up to 24h, which otherwise delays picking up new deploys.
   window.addEventListener('load', async ()=>{
     try{
       const reg = await navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
       reg.update();
-      document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) reg.update(); });
+      checkForUpdate(true);
+      document.addEventListener('visibilitychange', ()=>{
+        if(document.hidden) return;
+        reg.update();        // catches genuine sw.js changes
+        checkForUpdate();    // catches content-only deploys (throttled)
+      });
     }catch{}
   });
 }

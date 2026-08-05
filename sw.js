@@ -1,5 +1,5 @@
 /* Himmel — service worker */
-const CACHE = 'himmel-v24';
+const CACHE = 'himmel-v25';
 const WX_ICONS = ['clear-day','partly-cloudy-day','overcast-day','fog','fog-day',
   'drizzle','partly-cloudy-day-drizzle','rain','partly-cloudy-day-rain',
   'sleet','partly-cloudy-day-sleet','snow','partly-cloudy-day-snow',
@@ -31,6 +31,42 @@ self.addEventListener('activate', e => {
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
+});
+
+// Files whose content defines "a new version". The page pings us on open; we
+// compare the live copies against the cache and, if any changed, refresh the
+// whole shell and tell the page to reload — so a plain app.js/index.html/CSS
+// deploy to main rolls out without ever bumping CACHE by hand.
+const CRITICAL = ['./index.html', './app.js', './styles.css'];
+
+async function checkForUpdate(){
+  const cache = await caches.open(CACHE);
+  let changed = false;
+  for (const url of CRITICAL) {
+    try {
+      const net = await fetch(url, { cache: 'reload' }); // force network, skip HTTP cache
+      if (!net || net.status !== 200) continue;
+      const cached = await cache.match(url);
+      const [fresh, old] = await Promise.all([
+        net.clone().text(),
+        cached ? cached.text() : Promise.resolve(null)
+      ]);
+      if (old === null || fresh !== old) changed = true;
+      await cache.put(url, net.clone()); // keep the cache current either way
+    } catch { /* offline → treat as unchanged */ }
+  }
+  if (!changed) return;
+  // Something changed → also refresh the rest of the shell so the reload is consistent.
+  await Promise.all(SHELL.filter(u => !CRITICAL.includes(u)).map(async u => {
+    try { const r = await fetch(u, { cache: 'reload' }); if (r && r.status === 200) await cache.put(u, r.clone()); }
+    catch { /* ignore */ }
+  }));
+  const clients = await self.clients.matchAll();
+  clients.forEach(c => c.postMessage({ type: 'himmel-updated' }));
+}
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'himmel-check-update') e.waitUntil(checkForUpdate());
 });
 
 self.addEventListener('fetch', e => {

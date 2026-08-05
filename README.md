@@ -116,6 +116,11 @@ runs fullscreen (no browser chrome).
 - All asset paths are relative, so the app works correctly from the
   `/weather/` subpath that Pages serves it under.
 - `.nojekyll` is included so GitHub serves every file untouched.
+- Auto-updates itself: on open (and when brought back to the foreground) the
+  service worker compares the live `index.html`/`app.js`/`styles.css` on the
+  server against its cache and, on any change, refreshes the shell and reloads
+  the page into the new version. Pushing to `main` is enough — no manual
+  `CACHE` version bump in `sw.js` is required to roll out content changes.
 - Attribution to Open-Meteo and DWD is shown in the footer; the radar map
   carries its own RainViewer, OpenStreetMap and CARTO attribution, as their
   licenses request.
