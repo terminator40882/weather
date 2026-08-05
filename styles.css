@@ -160,7 +160,13 @@ body.is-stale-radar .radar-stale{opacity:1;visibility:visible}
 }
 
 /* red while no compass heading is available; turns warm once aligned to view */
-.arrow{display:inline-block;color:var(--hot);transition:color .2s}
+/* SVG arrow: viewBox has padding around the tip so rotation never clips it,
+   unlike the old ↑ text glyph whose head sat at the font box edge. */
+.arrow{
+  display:inline-block;width:1.05em;height:1.05em;vertical-align:-.16em;
+  color:var(--hot);overflow:visible;
+  transform-origin:center;transition:color .2s;
+}
 
 /* hourly */
 .hourly{border-top:1px solid var(--line);padding-top:20px}
